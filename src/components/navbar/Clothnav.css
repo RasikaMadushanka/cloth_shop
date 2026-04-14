@@ -1,0 +1,95 @@
+:root {
+  --sidebar-bg: #3b5998; /* The specific blue from your image */
+  --nav-hover: rgba(255, 255, 255, 0.1);
+  --active-bg: rgba(255, 255, 255, 0.2);
+  --text-color: #ffffff;
+}
+
+.sidebar_container {
+  width: 250px;
+  height: 100vh;
+  background-color: var(--sidebar-bg);
+  color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.sidebar_title {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logo-icon {
+  font-size: 2.5rem;
+}
+
+.header-text h1 {
+  font-size: 1rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.header-text span {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+.side_navbar {
+  flex-grow: 1;
+  padding-top: 20px;
+}
+
+.side_navbarv ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 15px 25px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  gap: 15px;
+}
+
+.nav-item:hover {
+  background-color: var(--nav-hover);
+}
+
+.nav-item.active {
+  background-color: var(--active-bg);
+  border-left: 4px solid #ffffff; /* Adds the indicator for the active page */
+}
+
+.nav-icon {
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+}
+
+.nav-label {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.sidebar_footer {
+  padding: 20px;
+  display: flex;
+  gap: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-icon {
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.footer-icon:hover {
+  opacity: 1;
+}

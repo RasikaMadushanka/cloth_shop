@@ -1,0 +1,85 @@
+.top_header {
+  height: 60px;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px;
+  border-bottom: 1px solid #e0e0e0;
+  width: 100%;
+}
+
+/* Breadcrumbs Styling */
+.header_left .breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.breadcrumb-separator {
+  color: #ccc;
+}
+
+.breadcrumb-item.active {
+  color: #333;
+}
+
+/* Right Side Styling */
+.header_right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.header_icon_btns {
+  display: flex;
+  gap: 10px;
+}
+
+.icon_btn {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  color: #555;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  transition: color 0.2s;
+}
+
+.icon_btn:hover {
+  color: #3b5998;
+}
+
+/* User Profile Styling */
+.user_profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 15px;
+  border-left: 1px solid #eee;
+  cursor: pointer;
+}
+
+.avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #ddd;
+}
+
+.user_name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.dropdown_arrow {
+  font-size: 1.2rem;
+  color: #888;
+}

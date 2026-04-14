@@ -4,8 +4,8 @@ import { MdDashboard, MdInventory, MdPointOfSale, MdAssessment, MdSettings, MdCh
 function Navbarasika() {
 
   const menuItems = [
-    { name: 'Dashboard', icon: <MdDashboard /> },
-    { name: 'Inventory', icon: <MdInventory />,active:true },
+    { name: 'Dashboard', icon: <MdDashboard />,active:true },
+    { name: 'Inventory', icon: <MdInventory /> },
     { name: 'Sales', icon: <MdPointOfSale /> },
     { name: 'Reports', icon: <MdAssessment /> },
     { name: 'Settings', icon: <MdSettings /> }
@@ -15,7 +15,7 @@ function Navbarasika() {
       <div className='sidebar_title'>
         <MdCheckroom className='logo-icon' />
         <div className='title_text'>
-          <h1>Clothing Shop</h1><span>Managemnt System</span>
+          <h3>Clothing Shop</h3><span>Managemnt System</span>
         </div>
       </div>
       <nav className='side_navbar'>
