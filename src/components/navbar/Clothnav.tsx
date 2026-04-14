@@ -1,10 +1,41 @@
 
 import './Clothnav.css'
-
+import { MdDashboard, MdInventory, MdPointOfSale, MdAssessment, MdSettings, MdCheckroom } from "react-icons/md";
 function Navbarasika() {
-  const menuItems = [{
-    'Dashboard'
-  }]
+
+  const menuItems = [
+    { name: 'Dashboard', icon: <MdDashboard /> },
+    { name: 'Inventory', icon: <MdInventory />,active:true },
+    { name: 'Sales', icon: <MdPointOfSale /> },
+    { name: 'Reports', icon: <MdAssessment /> },
+    { name: 'Settings', icon: <MdSettings /> }
+  ];
+  return (
+    <div className='sidebar_container'>
+      <div className='sidebar_title'>
+        <MdCheckroom className='logo-icon' />
+        <div className='title_text'>
+          <h1>Clothing Shop</h1><span>Managemnt System</span>
+        </div>
+      </div>
+      <nav className='side_navbar'>
+        <ul>
+          {menuItems.map((item, index) => (
+            <li key={index} className={item.active ? 'nav-item active' : 'nav-item'}>
+              <span className="nav-icon">{item.icon}</span>
+              <span className="nav-label">{item.name}</span>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    <div className="sidebar_footer">
+        {/* Placeholder for the bottom icons seen in your image */}
+        <div className="footer-icon">🔄</div>
+        <div className="footer-icon">⚙️</div>
+      </div>
+    </div>
+  );
+
 }
 
 export default Navbarasika
