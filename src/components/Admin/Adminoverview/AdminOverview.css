@@ -1,0 +1,62 @@
+.right_panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* Space between the chart and the table */
+}
+
+.overview_card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+}
+
+.overview_card_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.overview_card_header h4 { margin: 0; font-size: 0.95rem; color: #333; }
+
+.uelv_link { font-size: 0.75rem; color: #3498db; cursor: pointer; display: flex; align-items: center; }
+
+/* Bar Chart */
+.bar_chart_container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 120px;
+}
+
+.bar_wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 10%;
+}
+
+.bar {
+  width: 100%;
+  background: #3498db; /* Blue from your design */
+  border-radius: 4px;
+  transition: 0.3s;
+}
+
+.bar_label { font-size: 0.65rem; color: #999; margin-top: 8px; }
+
+/* Table */
+.stock_table { width: 100%; border-collapse: collapse; }
+
+.stock_table th { text-align: left; font-size: 0.7rem; color: #bbb; padding-bottom: 8px; }
+
+.stock_table td { padding: 10px 0; font-size: 0.8rem; border-bottom: 1px solid #f9f9f9; }
+
+.sku_fade { color: #aaa; }
+
+.stock_val { font-weight: 700; text-align: right; }
+
+.check_mark { color: #27ae60; margin-left: 4px; }

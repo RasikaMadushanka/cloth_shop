@@ -1,0 +1,101 @@
+.selling_container {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+  flex: 1.5; /* Takes up more room than side charts */
+}
+
+.selling_header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.selling_header h3 {
+  font-size: 1.1rem;
+  color: #333;
+  margin: 0;
+}
+
+.selling_table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.selling_table th {
+  text-align: left;
+  font-size: 0.8rem;
+  color: #a0a0a0;
+  padding: 10px;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.selling_table td {
+  padding: 12px 10px;
+  font-size: 0.9rem;
+  color: #444;
+  border-bottom: 1px solid #fcfcfc;
+}
+
+.product_cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+}
+
+.product_icon_bg {
+  width: 35px;
+  height: 35px;
+  background: #f4f6f9;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.revenue_badge_low {
+  background: #fff0f0;
+  color: #e74c3c;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.selling_footer {
+  margin-top: 20px;
+}
+
+.footer_search {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  background: #f9f9f9;
+  margin-bottom: 15px;
+}
+
+.filter_buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter_buttons button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid #eee;
+  background: white;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.filter_buttons button.active {
+  background: #3498db;
+  color: white;
+  border-color: #3498db;
+}
