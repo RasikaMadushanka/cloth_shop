@@ -1,5 +1,5 @@
 import { MdEdit, MdDelete, MdSearch, MdAdd } from "react-icons/md";
-
+import './ItemManagement.css'
 interface ProductItem {
     id: number;
     name: string;

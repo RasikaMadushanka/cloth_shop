@@ -1,7 +1,5 @@
 import './App.css'
-import AdminOverview from './components/Admin/Adminoverview/AdminOverview'
-import AdminSelling from './components/Admin/adminSelling/AdminSelling'
-import AdminSlot from './components/Admin/AdminSlot/AdminSlot'
+import ItemManagement from './components/inventory/ItemManagement'
 import Clothnav from './components/navbar/Clothnav'
 import Topheader from './components/topheader/Topheader'
 
@@ -12,30 +10,21 @@ function App() {
 
       <div className="main-content">
         <Topheader />
-        
-        {/* <div className="dashboard-body">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-            <h4 style={{ color: '#333', margin: 0 }}>Admin Dashboard</h4>
-            <button style={{ 
-              backgroundColor: '#4caf50', 
-              color: 'white', 
-              border: 'none', 
-              padding: '8px 15px', 
-              borderRadius: '8px',
-              fontWeight: 'bold',
-              cursor: 'pointer'
-            }}>
-              + Add New Product
-            </button>
+
+        <div className="inventory-row">
+
+          {/* LEFT SIDE (Item Management - SMALL) */}
+          <div className="left-panel">
+            <ItemManagement />
           </div>
 
-          <AdminSlot />
-
-          <div className="dashboard-main-row">
-            <AdminSelling /> 
-            <AdminOverview /> 
+          {/* RIGHT SIDE (BIG AREA) */}
+          <div className="right-panel">
+            <h2>Right Content</h2>
+            <p>Add POS / Billing / Dashboard here</p>
           </div>
-        </div> */}
+
+        </div>
       </div>
     </div>
   )

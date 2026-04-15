@@ -50,3 +50,37 @@
     flex-direction: column; /* Stack vertically on smaller screens */
   }
 }
+
+.inventory-row {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+}
+
+/* LEFT SMALL */
+.left-panel {
+  width: 550px; /* adjust size */
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px;
+  overflow-y: auto;
+ height: 620px;
+}
+
+/* RIGHT BIG */
+.right-panel {
+  flex: 1;
+  background: #fff;
+  border-radius: 10px;
+  padding: 15px;
+}
+@media (max-width: 768px) {
+  .inventory-row {
+    flex-direction: column;
+  }
+
+  .left-panel {
+    width: 100%;
+    max-height: none;
+  }
+}
