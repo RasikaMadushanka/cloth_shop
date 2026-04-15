@@ -1,23 +1,33 @@
-
-import './Clothnav.css'
+import React from 'react';
+import './Clothnav.css';
 import { MdDashboard, MdInventory, MdPointOfSale, MdAssessment, MdSettings, MdCheckroom } from "react-icons/md";
-function Navbarasika() {
 
-  const menuItems = [
-    { name: 'Dashboard', icon: <MdDashboard />,active:true },
+// Define the interface for your navigation items
+interface MenuItem {
+  name: string;
+  icon: React.ReactNode;
+  active?: boolean; // Optional property
+}
+
+const Navbarasika: React.FC = () => {
+  const menuItems: MenuItem[] = [
+    { name: 'Dashboard', icon: <MdDashboard />, active: true },
     { name: 'Inventory', icon: <MdInventory /> },
     { name: 'Sales', icon: <MdPointOfSale /> },
     { name: 'Reports', icon: <MdAssessment /> },
     { name: 'Settings', icon: <MdSettings /> }
   ];
+
   return (
     <div className='sidebar_container'>
       <div className='sidebar_title'>
         <MdCheckroom className='logo-icon' />
         <div className='title_text'>
-          <h3>Clothing Shop</h3><span>Managemnt System</span>
+          <h3>Clothing Shop</h3>
+          <span>Management System</span>
         </div>
       </div>
+
       <nav className='side_navbar'>
         <ul>
           {menuItems.map((item, index) => (
@@ -28,14 +38,13 @@ function Navbarasika() {
           ))}
         </ul>
       </nav>
-    <div className="sidebar_footer">
-        {/* Placeholder for the bottom icons seen in your image */}
+
+      <div className="sidebar_footer">
         <div className="footer-icon">🔄</div>
         <div className="footer-icon">⚙️</div>
       </div>
     </div>
   );
+};
 
-}
-
-export default Navbarasika
+export default Navbarasika;

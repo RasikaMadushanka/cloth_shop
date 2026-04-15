@@ -1,10 +1,11 @@
-import './Topheader.css'
+import React from 'react';
+import './Topheader.css';
 import { MdNotificationsNone, MdPlayCircleOutline, MdKeyboardArrowDown } from "react-icons/md";
 
-function Topheader() {
+const Topheader: React.FC = () => {
   return (
     <header className="top_header">
-     <div className="header_left">
+      <div className="header_left">
         <div className="breadcrumb">
           <span className="breadcrumb-icon">📊</span>
           <span className="breadcrumb-item">Inventory</span>
@@ -16,8 +17,12 @@ function Topheader() {
       {/* Right Side: Actions & Profile */}
       <div className="header_right">
         <div className="header_icon_btns">
-          <button className="icon_btn"><MdNotificationsNone /></button>
-          <button className="icon_btn"><MdPlayCircleOutline /></button>
+          <button className="icon_btn">
+            <MdNotificationsNone />
+          </button>
+          <button className="icon_btn">
+            <MdPlayCircleOutline />
+          </button>
         </div>
         
         <div className="user_profile">
@@ -34,6 +39,6 @@ function Topheader() {
       </div>   
     </header>
   );
-}
+};
 
-export default Topheader
+export default Topheader;

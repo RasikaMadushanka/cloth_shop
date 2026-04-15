@@ -1,33 +1,37 @@
 .top_header {
   height: 60px;
-  background-color: #ffffff;
+  background: white;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 0 30px;
-  border-bottom: 1px solid #e0e0e0;
+  align-items: center;
+  padding: 0 25px;
+  border-bottom: 1px solid #f0f0f0;
   width: 100%;
+  box-sizing: border-box;
 }
 
-/* Breadcrumbs Styling */
 .header_left .breadcrumb {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.9rem;
-  color: #666;
-  font-weight: 500;
+  font-size: 0.85rem;
+  color: #888;
 }
 
-.breadcrumb-separator {
-  color: #ccc;
+.breadcrumb-icon {
+  margin-right: 5px;
 }
 
 .breadcrumb-item.active {
   color: #333;
+  font-weight: 600;
 }
 
-/* Right Side Styling */
+.breadcrumb-separator {
+  font-size: 0.7rem;
+  color: #ccc;
+}
+
 .header_right {
   display: flex;
   align-items: center;
@@ -40,46 +44,52 @@
 }
 
 .icon_btn {
-  background: none;
+  background: #f8f9fa;
   border: none;
-  font-size: 1.4rem;
-  color: #555;
-  cursor: pointer;
+  width: 35px;
+  height: 35px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
-  padding: 5px;
-  transition: color 0.2s;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: #666;
+  cursor: pointer;
+  transition: 0.2s;
 }
 
 .icon_btn:hover {
-  color: #3b5998;
+  background: #eef0f2;
 }
 
-/* User Profile Styling */
 .user_profile {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding-left: 15px;
-  border-left: 1px solid #eee;
   cursor: pointer;
+  padding: 5px;
+  border-radius: 8px;
 }
 
 .avatar {
-  width: 35px;
-  height: 35px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   object-fit: cover;
-  background-color: #ddd;
+}
+
+.user_info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .user_name {
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 500;
   color: #333;
 }
 
 .dropdown_arrow {
-  font-size: 1.2rem;
-  color: #888;
+  color: #aaa;
 }

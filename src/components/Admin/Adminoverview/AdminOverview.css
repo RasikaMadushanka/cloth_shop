@@ -2,7 +2,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 20px; /* Space between the chart and the table */
+  gap: 20px;
 }
 
 .overview_card {
@@ -20,43 +20,83 @@
   margin-bottom: 20px;
 }
 
-.overview_card_header h4 { margin: 0; font-size: 0.95rem; color: #333; }
+.overview_card_header h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #333;
+}
 
-.uelv_link { font-size: 0.75rem; color: #3498db; cursor: pointer; display: flex; align-items: center; }
+.uelv_link {
+  font-size: 0.75rem;
+  color: #3498db;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
 
-/* Bar Chart */
+/* Bar Chart Styles */
 .bar_chart_container {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
-  height: 120px;
+  align-items: flex-end; /* Keeps bars at the bottom */
+  height: 150px; /* Essential: The chart needs a fixed height */
+  padding: 10px 0;
 }
 
 .bar_wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 10%;
+  width: 30px; /* Fixed width for each bar column */
+  height: 100%; /* Important for alignment */
+  justify-content: flex-end;
 }
 
 .bar {
-  width: 100%;
-  background: #3498db; /* Blue from your design */
-  border-radius: 4px;
-  transition: 0.3s;
+  width: 100%; /* Fills the bar_wrapper width */
+  background-color: #3498db; /* The blue color from your design */
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s ease;
+  min-height: 2px; /* Ensures even 0% data shows a tiny sliver */
 }
 
-.bar_label { font-size: 0.65rem; color: #999; margin-top: 8px; }
+.bar_label {
+  font-size: 10px;
+  color: #888;
+  margin-top: 8px;
+}
 
-/* Table */
-.stock_table { width: 100%; border-collapse: collapse; }
+/* Table Styles */
+.stock_table {
+  width: 100%;
+  border-collapse: collapse;
+}
 
-.stock_table th { text-align: left; font-size: 0.7rem; color: #bbb; padding-bottom: 8px; }
+.stock_table th {
+  text-align: left;
+  font-size: 0.7rem;
+  color: #bbb;
+  padding-bottom: 8px;
+  text-transform: uppercase;
+}
 
-.stock_table td { padding: 10px 0; font-size: 0.8rem; border-bottom: 1px solid #f9f9f9; }
+.stock_table td {
+  padding: 10px 0;
+  font-size: 0.8rem;
+  border-bottom: 1px solid #f9f9f9;
+  color: #444;
+}
 
-.sku_fade { color: #aaa; }
+.sku_fade {
+  color: #aaa;
+}
 
-.stock_val { font-weight: 700; text-align: right; }
+.stock_val {
+  font-weight: 700;
+  text-align: right;
+}
 
-.check_mark { color: #27ae60; margin-left: 4px; }
+.check_mark {
+  color: #27ae60;
+  margin-left: 4px;
+}
