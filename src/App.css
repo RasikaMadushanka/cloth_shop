@@ -1,19 +1,3 @@
-/* App.css */
-.app-wrapper {
-  display: flex;
-  width: 100%;
-  min-height: 100vh;
-  background-color: #f5f7fb;
-  margin: 0;
-  padding: 0;
-}
-
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow-x: hidden;
-}
 
 .dashboard-body {
   padding: 10px;
@@ -51,36 +35,41 @@
   }
 }
 
+.app-wrapper {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  background-color: #f5f7fb;
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
 .inventory-row {
   display: flex;
+  flex: 1;
   gap: 20px;
   padding: 20px;
+  overflow: hidden; /* This keeps the panels from growing off-screen */
 }
 
-/* LEFT SMALL */
 .left-panel {
-  width: 550px; /* adjust size */
+  flex: 1.6; /* Wider side for products/table */
   background: #fff;
-  border-radius: 10px;
-  padding: 10px;
-  overflow-y: auto;
- height: 620px;
+  border-radius: 15px;
+  overflow-y: auto; /* The table side can scroll */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
-/* RIGHT BIG */
 .right-panel {
-  flex: 1;
+  flex: 1; /* Billing side */
   background: #fff;
-  border-radius: 10px;
-  padding: 15px;
-}
-@media (max-width: 768px) {
-  .inventory-row {
-    flex-direction: column;
-  }
-
-  .left-panel {
-    width: 100%;
-    max-height: none;
-  }
+  border-radius: 15px;
+  overflow: hidden; /* Handled by InventoryBilling's internal flex */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
