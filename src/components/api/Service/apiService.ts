@@ -1,13 +1,18 @@
 import api from '../axiosConfig';
 
-// 1. PRODUCT CONTROLLER (Matches ProductController.java)
+
 export const productApi = {
-  getAll: () => api.get('/products/all'),
-  add: (data: any) => api.post('/products/add', data),
-  // Note the corrected path to include /products/
+  // Now becomes http://localhost:8080/api/products/all
+  getAll: () => api.get('/api/products/all'),
+
+  add: (data: any) => api.post('/api/products/add', data),
+
+  update: (id: number, data: any) => api.put(`/api/products/update/${id}`, data),
+
   updatePrice: (barcodeId: string, newPrice: number) => 
-    api.patch('/products/update-price-by-barcode', { barcodeId, newPrice }),
-  delete: (id: number) => api.delete(`/products/delete/${id}`),
+    api.patch('/api/products/update-price-by-barcode', { barcodeId, newPrice }),
+
+  delete: (id: number) => api.delete(`/api/products/delete/${id}`),
 };
 
 // 2. STOCK CONTROLLER (Matches Stock_Controller.java)

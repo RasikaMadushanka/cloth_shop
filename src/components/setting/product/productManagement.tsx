@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Barcode from 'react-barcode';
+import html2canvas from 'html2canvas'; 
 import { productApi } from '../../api/Service/apiService';
 
-// --- UPDATED INTERFACES TO MATCH YOUR API DATA ---
+// --- INTERFACES ---
 interface Variant {
-  variantId?: string; // New from API
-  sku?: string;       // New from API
+  variantId?: string;
+  sku?: string;
   size: string;
   color: string;
   stockQuantity: number;
   priceOverride: number;
-  finalPrice?: number | null; // New from API
+  finalPrice?: number | null;
   barcodeId?: string;
 }
 
@@ -20,23 +21,92 @@ interface Product {
   category: string;
   basePrice: number;
   discountPercentage: number;
-  discountedPrice?: number;   // New from API
-  totalQuantity?: number;     // New from API
-  stockStatus?: string;       // New from API
-  availableColors?: string[]; // New from API
-  availableSizes?: string[];  // New from API
-  createdAt?: string;         // New from API
+  discountedPrice?: number;
+  totalQuantity?: number;
+  stockStatus?: string;
+  availableColors?: string[];
+  availableSizes?: string[];
   variants: Variant[];
 }
 
 const ProductManagement: React.FC = () => {
-  // --- YOUR ORIGINAL EAN-13 GENERATOR ---
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'ADD' | 'UPDATE_VARIANT' | 'MANAGE'>('ADD');
+  const [selectedProductId, setSelectedProductId] = useState<number | "">("");
+  const [barcodeModal, setBarcodeModal] = useState<{ productName: string, variants: Variant[] } | null>(null);
+
+  // Forms
+  const [productForm, setProductForm] = useState({ productName: '', category: '', basePrice: 3500.0, discountPercentage: 0.0 });
+  const [variantForm, setVariantForm] = useState<Variant>({ size: '', color: '', stockQuantity: 0, priceOverride: 0 });
+
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await productApi.getAll();
+      setProducts(response.data || []);
+    } catch (error) {
+      console.error("Fetch Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  // --- FIXED BARCODE DOWNLOAD LOGIC ---
+  const downloadBarcodeTags = async () => {
+    const tags = document.querySelectorAll('.barcode-tag-item');
+    if (tags.length === 0) {
+      alert("No tags found to download.");
+      return;
+    }
+
+    for (let i = 0; i < tags.length; i++) {
+      const element = tags[i] as HTMLElement;
+      try {
+        const canvas = await html2canvas(element, {
+          scale: 4, 
+          backgroundColor: "#ffffff",
+          logging: false,
+          useCORS: true,
+          allowTaint: true,
+          // CRITICAL: Forces standard colors in the clone to bypass oklch parser error
+          onclone: (clonedDoc) => {
+            const el = clonedDoc.querySelectorAll('.barcode-tag-item')[i] as HTMLElement;
+            if (el) {
+              el.style.backgroundColor = "#ffffff";
+              el.style.color = "#000000";
+            }
+          }
+        });
+
+        const image = canvas.toDataURL("image/png");
+        const link = document.createElement('a');
+        link.href = image;
+        
+        const safeName = barcodeModal?.productName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        link.download = `${safeName}_tag_${i + 1}.png`;
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Small delay to prevent browser download blocking
+        await new Promise(resolve => setTimeout(resolve, 400));
+      } catch (err) {
+        console.error("Download failed for index", i, err);
+      }
+    }
+  };
+
   const generateRealBarcode = (pId: number, vCount: number): string => {
-    const prefix = "479"; // Sri Lanka
+    const prefix = "479"; 
     const companyCode = "8000";
     const productPart = `${pId}${vCount}`.slice(-5).padStart(5, '0');
     const base = prefix + companyCode + productPart;
-
     let sum = 0;
     for (let i = 0; i < 12; i++) {
       const digit = parseInt(base[i]);
@@ -46,133 +116,136 @@ const ProductManagement: React.FC = () => {
     return base + checkDigit.toString();
   };
 
-  const [products, setProducts] = useState<Product[]>([
-    {
-      productId: 1,
-      productName: "Slim Fit Linen Shirt",
-      category: "Men's Casual",
-      basePrice: 3500.0,
-      discountPercentage: 0.0,
-      discountedPrice: 3500.0,
-      totalQuantity: 35,
-      stockStatus: "AVAILABLE",
-      availableColors: ["White", "Blue"],
-      availableSizes: ["M", "L"],
-      variants: [
-        { variantId: "8d1f6dd2-f94d-4338-a0dc-8154eb84079f", sku: "MEN-SLI-M", size: "M", color: "White", stockQuantity: 20, priceOverride: 3500.0, barcodeId: "4798000136077" },
-        { variantId: "82aed2f7-848e-4403-8f75-73af1169ab3f", sku: "MEN-SLI-L", size: "L", color: "Blue", stockQuantity: 15, priceOverride: 3500.0, barcodeId: "4798000498526" }
-      ]
-    }
-  ]);
-
-  const [activeTab, setActiveTab] = useState<'ADD' | 'UPDATE_VARIANT' | 'MANAGE'>('ADD');
-  const [selectedProductId, setSelectedProductId] = useState<number | "">("");
-  const [barcodeModal, setBarcodeModal] = useState<{ productName: string, variants: Variant[] } | null>(null);
-
-  const [productForm, setProductForm] = useState({ productName: '', category: '', basePrice: 3500.0, discountPercentage: 0.0 });
-  const [variantForm, setVariantForm] = useState<Variant>({ size: '', color: '', stockQuantity: 0, priceOverride: 3500.0 });
-
-  // --- YOUR ORIGINAL FUNCTIONS ---
-  const handleInitialProductAdd = (e: React.FormEvent) => {
+  const handleInitialProductAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newProduct: Product = { ...productForm, productId: products.length + 1, variants: [] };
-    setProducts([...products, newProduct]);
-    setProductForm({ productName: '', category: '', basePrice: 3500.0, discountPercentage: 0.0 });
-  };
-
-  const handleAddVariantToExisting = () => {
-    if (!selectedProductId) return;
-    setProducts(prev => prev.map(p => {
-      if (p.productId === selectedProductId) {
-        const nextVariantIndex = p.variants.length + 1;
-        const realBarcode = generateRealBarcode(p.productId, nextVariantIndex);
-        return { ...p, variants: [...p.variants, { ...variantForm, barcodeId: realBarcode }] };
-      }
-      return p;
-    }));
-    setVariantForm({ size: '', color: '', stockQuantity: 0, priceOverride: 3500.0 });
-  };
-
-  const handleItemPriceChange = (barcode: string) => {
-    const newPrice = window.prompt(`Update price for Barcode: ${barcode}`);
-    if (newPrice) {
-      setProducts(prev => prev.map(p => ({
-        ...p,
-        variants: p.variants.map(v => v.barcodeId === barcode ? { ...v, priceOverride: parseFloat(newPrice) } : v)
-      })));
+    try {
+      await productApi.add({ ...productForm, variants: [] });
+      setProductForm({ productName: '', category: '', basePrice: 3500.0, discountPercentage: 0.0 });
+      await loadProducts();
+      alert("Master Product Registered Successfully!");
+    } catch (error) {
+      alert("Error adding product.");
     }
   };
+
+  const handleAddVariantToExisting = async () => {
+    if (selectedProductId === "" || isNaN(Number(selectedProductId))) {
+      alert("Please select a Master Product first.");
+      return;
+    }
+
+    const targetProduct = products.find(p => p.productId === Number(selectedProductId));
+    if (!targetProduct) return;
+
+    const existingVariants = targetProduct.variants || [];
+    const realBarcode = generateRealBarcode(targetProduct.productId, existingVariants.length + 1);
+
+    const newVariant: Variant = {
+      ...variantForm,
+      barcodeId: realBarcode,
+      priceOverride: variantForm.priceOverride > 0 ? variantForm.priceOverride : targetProduct.basePrice
+    };
+
+    const updatedDto: Product = {
+      ...targetProduct,
+      variants: [...existingVariants, newVariant]
+    };
+
+    try {
+      await productApi.update(targetProduct.productId, updatedDto);
+      setVariantForm({ size: '', color: '', stockQuantity: 0, priceOverride: 0 });
+      setSelectedProductId("");
+      await loadProducts();
+      alert("Variant added successfully!");
+    } catch (error) {
+      alert("Failed to append variant.");
+    }
+  };
+
+  const handleItemPriceChange = async (barcode: string) => {
+    if (!barcode) return;
+    const newPrice = window.prompt(`Enter new price for barcode: ${barcode}`);
+    if (newPrice && !isNaN(parseFloat(newPrice))) {
+      try {
+        await productApi.updatePrice(barcode, parseFloat(newPrice));
+        await loadProducts();
+        alert("Price updated!");
+      } catch (error) {
+        alert("Failed to update price");
+      }
+    }
+  };
+
+  const handleDeleteProduct = async (id: number) => {
+    if (window.confirm("Permanently delete this product and ALL variants?")) {
+      try {
+        await productApi.delete(id);
+        await loadProducts();
+      } catch (error) {
+        alert("Delete failed.");
+      }
+    }
+  };
+
+  if (loading) return <div className="min-h-screen bg-[#0a0f1d] flex items-center justify-center text-blue-500 font-black animate-pulse uppercase tracking-widest">Initialising Inventory...</div>;
 
   return (
     <div className="min-h-screen bg-[#0a0f1d] p-6 lg:p-12 text-slate-300">
       <div className="max-w-6xl mx-auto space-y-10">
 
-        {/* Navigation */}
-        <div className="flex flex-wrap gap-4 p-1 bg-white/5 w-fit rounded-2xl border border-white/10">
-          <button onClick={() => setActiveTab('ADD')} className={`px-6 py-3 rounded-xl font-black text-[10px] transition-all ${activeTab === 'ADD' ? 'bg-blue-600 text-white' : 'hover:bg-white/5'}`}>1. NEW PRODUCT</button>
-          <button onClick={() => setActiveTab('UPDATE_VARIANT')} className={`px-6 py-3 rounded-xl font-black text-[10px] transition-all ${activeTab === 'UPDATE_VARIANT' ? 'bg-amber-600 text-white' : 'hover:bg-white/5'}`}>2. ADD VARIANTS</button>
-          <button onClick={() => setActiveTab('MANAGE')} className={`px-6 py-3 rounded-xl font-black text-[10px] transition-all ${activeTab === 'MANAGE' ? 'bg-cyan-600 text-white' : 'hover:bg-white/5'}`}>3. SYSTEM CONTROL</button>
+        {/* Tab Navigation */}
+        <div className="flex gap-4 p-1 bg-white/5 w-fit rounded-2xl border border-white/10">
+          {(['ADD', 'UPDATE_VARIANT', 'MANAGE'] as const).map((tab) => (
+            <button 
+              key={tab}
+              onClick={() => setActiveTab(tab)} 
+              className={`px-6 py-3 rounded-xl font-black text-[10px] transition-all ${activeTab === tab ? 'bg-blue-600 text-white' : 'hover:bg-white/5'}`}
+            >
+              {tab.replace('_', ' ')}
+            </button>
+          ))}
         </div>
 
-        {/* Add Product Section */}
         {activeTab === 'ADD' && (
           <section className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2rem] p-8 shadow-2xl">
-            <h2 className="text-xl font-black text-white mb-6 uppercase tracking-widest italic">Register Master Item</h2>
+            <h2 className="text-xl font-black text-white mb-6 uppercase italic">Register Master Item</h2>
             <form onSubmit={handleInitialProductAdd} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <input placeholder="Product Name" className="bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-blue-500" value={productForm.productName} onChange={e => setProductForm({ ...productForm, productName: e.target.value })} required />
-              <input placeholder="Category" className="bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-blue-500" value={productForm.category} onChange={e => setProductForm({ ...productForm, category: e.target.value })} required />
-              <input type="number" placeholder="Base Price" className="bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-blue-500" value={productForm.basePrice} onChange={e => setProductForm({ ...productForm, basePrice: +e.target.value })} required />
-              <button type="submit" className="bg-blue-600 py-4 rounded-xl font-black text-white hover:bg-blue-700 transition-colors uppercase text-[10px]">Initialize Product</button>
+              <input placeholder="Product Name" className="bg-white/5 border border-white/10 p-4 rounded-xl outline-none" value={productForm.productName} onChange={e => setProductForm({ ...productForm, productName: e.target.value })} required />
+              <input placeholder="Category" className="bg-white/5 border border-white/10 p-4 rounded-xl outline-none" value={productForm.category} onChange={e => setProductForm({ ...productForm, category: e.target.value })} required />
+              <input type="number" placeholder="Base Price" className="bg-white/5 border border-white/10 p-4 rounded-xl outline-none" value={productForm.basePrice} onChange={e => setProductForm({ ...productForm, basePrice: +e.target.value })} required />
+              <button type="submit" className="bg-blue-600 py-4 rounded-xl font-black text-white uppercase text-[10px]">Initialize Product</button>
             </form>
           </section>
         )}
 
-        {/* Update Variant Section */}
         {activeTab === 'UPDATE_VARIANT' && (
           <section className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2rem] p-8 shadow-2xl">
-            <h2 className="text-xl font-black text-white mb-6 uppercase tracking-widest italic">Append New Variants</h2>
+            <h2 className="text-xl font-black text-white mb-6 uppercase italic">Append New Variants</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <select className="bg-white/5 border border-white/10 p-4 rounded-xl outline-none md:col-span-3 text-slate-400" value={selectedProductId} onChange={e => setSelectedProductId(+e.target.value)}>
+              <select className="bg-white/5 border border-white/10 p-4 rounded-xl outline-none md:col-span-3" value={selectedProductId} onChange={e => setSelectedProductId(e.target.value === "" ? "" : Number(e.target.value))}>
                 <option value="">Choose Master Product...</option>
-                {products.map(p => <option key={p.productId} value={p.productId}>{p.productName}</option>)}
+                {products.map(p => <option key={p.productId} value={p.productId}>{p.productName} (ID: {p.productId})</option>)}
               </select>
               <input placeholder="Size" className="bg-white/5 border border-white/10 p-4 rounded-xl outline-none" value={variantForm.size} onChange={e => setVariantForm({ ...variantForm, size: e.target.value })} />
               <input placeholder="Color" className="bg-white/5 border border-white/10 p-4 rounded-xl outline-none" value={variantForm.color} onChange={e => setVariantForm({ ...variantForm, color: e.target.value })} />
               <input type="number" placeholder="Stock Qty" className="bg-white/5 border border-white/10 p-4 rounded-xl outline-none" value={variantForm.stockQuantity || ''} onChange={e => setVariantForm({ ...variantForm, stockQuantity: +e.target.value })} />
-              <button onClick={handleAddVariantToExisting} className="md:col-span-3 bg-amber-600 py-4 rounded-xl font-black text-white uppercase hover:bg-amber-700 transition-colors">Generate Barcode & Add</button>
+              <button onClick={handleAddVariantToExisting} className="md:col-span-3 bg-amber-600 py-4 rounded-xl font-black text-white uppercase text-[11px] tracking-widest">Generate Barcode & Add</button>
             </div>
           </section>
         )}
 
-        {/* --- NEW: MASTER PRODUCT VIEW TABLE --- */}
         <div className="space-y-8">
           <h2 className="text-sm font-black text-white uppercase tracking-[0.4em] italic opacity-50">Global Inventory Master</h2>
           {products.map(product => (
-            <div key={product.productId} className="bg-white/5 border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl transition-all hover:border-white/20">
-              {/* Product Header Card */}
+            <div key={product.productId} className="bg-white/5 border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl">
               <div className="p-8 bg-white/[0.02] flex flex-wrap justify-between items-start border-b border-white/5 gap-6">
                 <div className="space-y-2">
                   <p className="text-[10px] text-blue-500 font-bold uppercase tracking-widest">{product.category}</p>
                   <h3 className="text-2xl font-black text-white uppercase italic">{product.productName}</h3>
-                  <div className="flex gap-2">
-                    {product.availableColors?.map(c => <span key={c} className="px-2 py-0.5 bg-white/5 rounded text-[8px] font-bold text-slate-400 border border-white/5 uppercase">{c}</span>)}
-                    {product.availableSizes?.map(s => <span key={s} className="px-2 py-0.5 bg-blue-500/10 rounded text-[8px] font-bold text-blue-400 border border-blue-500/20 uppercase">{s}</span>)}
-                  </div>
                 </div>
-                
-                <div className="flex gap-8 text-right">
-                  <div>
-                    <p className="text-[9px] text-slate-500 font-bold uppercase">Total Qty</p>
-                    <p className="text-xl font-black text-white">{product.totalQuantity || 0}</p>
-                  </div>
-                  <div>
-                    <p className="text-[9px] text-slate-500 font-bold uppercase">Status</p>
-                    <p className={`text-[10px] font-black uppercase ${product.stockStatus === 'AVAILABLE' ? 'text-green-500' : 'text-red-500'}`}>{product.stockStatus || 'UNKNOWN'}</p>
-                  </div>
-                </div>
+                <button onClick={() => handleDeleteProduct(product.productId)} className="px-4 py-2 bg-red-500/10 text-red-500 text-[10px] font-black rounded-lg border border-red-500/20 hover:bg-red-500 hover:text-white transition-all">DELETE PRODUCT</button>
               </div>
 
-              {/* Variant Table */}
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead className="bg-black/20 text-[9px] text-slate-500 uppercase font-black tracking-widest">
@@ -181,26 +254,21 @@ const ProductManagement: React.FC = () => {
                       <th className="px-8 py-4">Attributes</th>
                       <th className="px-8 py-4">Stock</th>
                       <th className="px-8 py-4">Barcode</th>
-                      <th className="px-8 py-4 text-right">Unit Price</th>
+                      <th className="px-8 py-4 text-right">Price Action</th>
                     </tr>
                   </thead>
                   <tbody className="text-xs divide-y divide-white/5">
-                    {product.variants.map((v, i) => (
-                      <tr key={i} className="hover:bg-white/[0.01] transition-colors">
-                        <td className="px-8 py-5">
-                          <p className="font-bold text-white uppercase">{v.sku || 'N/A'}</p>
-                          <p className="text-[9px] text-slate-500 font-mono mt-0.5 truncate max-w-[120px]">{v.variantId}</p>
+                    {product.variants?.map((v, i) => (
+                      <tr key={i} className="hover:bg-white/[0.01]">
+                        <td className="px-8 py-5 text-white uppercase font-bold">{v.sku || `V-${i+1}`}</td>
+                        <td className="px-8 py-5"><span className="text-slate-300 font-black">{v.size}</span><span className="mx-2 text-slate-600">|</span><span className="text-slate-400 uppercase">{v.color}</span></td>
+                        <td className="px-8 py-5 text-slate-300">{v.stockQuantity}</td>
+                        <td className="px-8 py-5 font-mono text-[10px] text-blue-400/60">{v.barcodeId || 'GEN-ERR'}</td>
+                        <td className="px-8 py-5 text-right">
+                            <button onClick={() => handleItemPriceChange(v.barcodeId!)} className="text-white font-black italic bg-white/5 px-3 py-1 rounded border border-white/10 hover:border-blue-500">
+                              Rs. {v.priceOverride?.toLocaleString()} ✎
+                            </button>
                         </td>
-                        <td className="px-8 py-5">
-                          <span className="text-slate-300 font-black">{v.size}</span>
-                          <span className="mx-2 text-slate-600">|</span>
-                          <span className="text-slate-400 uppercase">{v.color}</span>
-                        </td>
-                        <td className="px-8 py-5">
-                          <span className={`font-mono font-bold ${v.stockQuantity < 5 ? 'text-red-500' : 'text-slate-300'}`}>{v.stockQuantity}</span>
-                        </td>
-                        <td className="px-8 py-5 font-mono text-[10px] text-blue-400/60">{v.barcodeId}</td>
-                        <td className="px-8 py-5 text-right font-black text-white italic">Rs. {v.priceOverride.toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -210,55 +278,60 @@ const ProductManagement: React.FC = () => {
           ))}
         </div>
 
-        {/* Original Action Sections */}
         {activeTab === 'MANAGE' && (
-          <section className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2rem] p-8 shadow-2xl">
-            <h2 className="text-xl font-black text-white mb-6 uppercase tracking-widest italic text-center">Printable Barcode Labels</h2>
-            <div className="grid grid-cols-1 gap-4">
-              {products.map(p => (
-                <div key={p.productId} className="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5">
-                  <span className="font-bold text-white uppercase text-xs">{p.productName}</span>
-                  <button onClick={() => setBarcodeModal({ productName: p.productName, variants: p.variants })} className="text-[10px] font-black text-cyan-400 border border-cyan-400/30 px-6 py-2 rounded-xl hover:bg-cyan-400 hover:text-white transition-all">GENERATE TAGS</button>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Dynamic Barcode Modal */}
-        {barcodeModal && (
-          <div className="fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-6 z-50">
-            <div className="bg-[#111827] border border-white/10 rounded-[3rem] w-full max-w-lg p-10 overflow-hidden">
-              <h3 className="text-xl font-black text-white mb-2 uppercase italic text-center">{barcodeModal.productName}</h3>
-              <p className="text-[10px] text-slate-500 text-center mb-8 font-bold uppercase tracking-widest">Scanning Ready</p>
-
-              <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-4 custom-scrollbar">
-                {barcodeModal.variants.map((v, idx) => (
-                  <div key={idx} className="bg-white p-6 rounded-[2rem] flex flex-col items-center justify-center shadow-xl">
-                    <p className="text-[10px] text-black font-black uppercase mb-1">{barcodeModal.productName}</p>
-                    <p className="text-[9px] text-slate-600 font-bold mb-4">{v.size} - {v.color} | Rs. {v.priceOverride}</p>
-
-                    <div className="bg-white p-2 rounded-lg border border-slate-100">
-                      <Barcode
-                        value={v.barcodeId || "0000000000000"}
-                        format="CODE128"
-                        lineColor="#000000"
-                        background="#FFFFFF"
-                        displayValue={true}
-                        width={1.2}
-                        height={50}
-                        fontSize={12}
-                        margin={0}
-                      />
-                    </div>
+            <section className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2rem] p-8 shadow-2xl">
+              <h2 className="text-xl font-black text-white mb-6 uppercase italic text-center">Barcode Tag Manager</h2>
+              <div className="grid grid-cols-1 gap-4">
+                {products.map(p => (
+                  <div key={p.productId} className="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5">
+                    <span className="font-bold text-white uppercase text-xs">{p.productName}</span>
+                    <button onClick={() => setBarcodeModal({ productName: p.productName, variants: p.variants || [] })} className="text-[10px] font-black text-cyan-400 border border-cyan-400/30 px-6 py-2 rounded-xl hover:bg-cyan-400 hover:text-white transition-all tracking-widest">OPEN TAG MODAL</button>
                   </div>
                 ))}
               </div>
+            </section>
+        )}
 
-              <div className="mt-8 flex gap-4">
-                <button onClick={() => window.print()} className="flex-1 py-4 bg-cyan-600 rounded-2xl text-[10px] font-black text-white uppercase tracking-tighter">Print Labels</button>
-                <button onClick={() => setBarcodeModal(null)} className="flex-1 py-4 bg-white/5 rounded-2xl text-[10px] font-black text-white uppercase tracking-tighter">Close</button>
-              </div>
+        {barcodeModal && (
+          <div className="fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-6 z-50">
+            <div className="bg-[#111827] border border-white/10 rounded-[3rem] w-full max-w-lg p-10">
+                <h2 className="text-white font-black uppercase text-center mb-6 tracking-tighter text-xl italic">Downloadable Tags</h2>
+                <div className="space-y-6 max-h-[50vh] overflow-y-auto pr-4 custom-scrollbar">
+                 {barcodeModal.variants.map((v, idx) => (
+                   /* FIXED STYLING FOR DOWNLOAD COMPATIBILITY */
+                   <div 
+                    key={idx} 
+                    className="barcode-tag-item p-6 rounded-[1.5rem] flex flex-col items-center justify-center"
+                    style={{ backgroundColor: '#ffffff', color: '#000000' }}
+                   >
+                     <p style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '4px', color: '#000000' }}>
+                        {barcodeModal.productName}
+                     </p>
+                     <p style={{ fontSize: '9px', fontWeight: 700, marginBottom: '16px', color: '#4b5563' }}>
+                        {v.size} - {v.color} | Rs. {v.priceOverride}
+                     </p>
+                     <Barcode 
+                        value={v.barcodeId || "0"} 
+                        format="CODE128" 
+                        width={1.2} 
+                        height={50} 
+                        displayValue={true} 
+                        renderer="canvas" 
+                        background="#ffffff"
+                        lineColor="#000000"
+                     />
+                   </div>
+                 ))}
+               </div>
+               <div className="mt-8 flex flex-col gap-3">
+                 <button 
+                   onClick={downloadBarcodeTags} 
+                   className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 rounded-2xl text-[10px] font-black text-white uppercase transition-colors tracking-[0.2em]"
+                 >
+                   Download PNG Tags
+                 </button>
+                 <button onClick={() => setBarcodeModal(null)} className="w-full py-4 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] font-black text-white uppercase transition-all">Close</button>
+               </div>
             </div>
           </div>
         )}
