@@ -1,0 +1,32 @@
+/* ===== Layout Styling ===== */
+.report-bg {
+  background-color: #f8fafc; /* Matches the image background */
+}
+
+.card-ui {
+  background-color: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.card-ui:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+  background-color: #2563eb;
+  box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.3);
+}
+
+.table-ui th {
+  background-color: #f8fafc;
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* Fix for Recharts Responsive Container */
+.recharts-responsive-container {
+  min-height: 250px;
+}

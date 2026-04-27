@@ -1,0 +1,47 @@
+/* Layout container */
+.reports-container {
+  display: flex;
+  height: 100vh;
+  background-color: #f8fafc; /* Lighter, modern grey */
+  overflow: hidden;
+  font-family: 'Inter', sans-serif; /* Use a clean font */
+}
+
+/* Sidebar - Match the deep blue in the image */
+.sidebar {
+  width: 240px;
+  background: #2563eb; /* Adjust to match your Clothnav theme */
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Make the header look integrated */
+.top-header {
+  height: 64px;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+}
+
+/* This is where the magic happens */
+.main-scroll {
+  flex: 1;
+  padding: 32px; /* Large padding for a "breathing" layout */
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+/* Responsive fixes */
+@media (max-width: 1024px) {
+  .sidebar { width: 80px; } /* Collapse sidebar on tablets */
+  .main-scroll { padding: 16px; }
+}

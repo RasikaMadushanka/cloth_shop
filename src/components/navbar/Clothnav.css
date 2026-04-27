@@ -1,41 +1,50 @@
 :root {
-  --sidebar-bg: #3b5998; /* The specific blue from your image */
+  --sidebar-bg: #3b5998; /* Your specific blue */
   --nav-hover: rgba(255, 255, 255, 0.1);
-  --active-bg: rgba(255, 255, 255, 0.2);
+  --active-bg: rgba(255, 255, 255, 0.25);
   --text-color: #ffffff;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar_container {
-  width: 250px;
+  width: 260px; /* Slightly wider for better breathing room */
   height: 100vh;
   background-color: var(--sidebar-bg);
   color: var(--text-color);
   display: flex;
   flex-direction: column;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  position: sticky;
+  top: 0;
+  left: 0;
+  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
 }
 
 .sidebar_title {
-  padding: 20px;
+  padding: 30px 20px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 15px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .logo-icon {
-  font-size: 2.5rem;
+  font-size: 2.8rem;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
 }
 
-.header-text h1 {
-  font-size: 1rem;
+.title_text h3 {
+  font-size: 1.1rem;
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
-.header-text span {
-  font-size: 0.7rem;
-  opacity: 0.8;
+.title_text span {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  display: block;
+  margin-top: 2px;
 }
 
 .side_navbar {
@@ -43,53 +52,69 @@
   padding-top: 20px;
 }
 
-.side_navbarv ul {
+.side_navbar ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
+/* THE NAV ITEM */
 .nav-item {
   display: flex;
   align-items: center;
-  padding: 15px 25px;
-  cursor: pointer;
-  transition: background 0.3s ease;
+  padding: 16px 25px;
+  text-decoration: none; /* Critical: Removes underline */
+  color: var(--text-color);
   gap: 15px;
+  transition: var(--transition);
+  border-left: 4px solid transparent;
 }
 
 .nav-item:hover {
   background-color: var(--nav-hover);
+  padding-left: 30px; /* Subtle slide effect */
 }
 
 .nav-item.active {
   background-color: var(--active-bg);
-  border-left: 4px solid #ffffff; /* Adds the indicator for the active page */
+  border-left: 4px solid #ffffff;
+  font-weight: 600;
 }
 
 .nav-icon {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   display: flex;
   align-items: center;
+  opacity: 0.9;
 }
 
 .nav-label {
   font-size: 0.95rem;
-  font-weight: 500;
+  letter-spacing: 0.3px;
 }
 
+/* FOOTER SECTION */
 .sidebar_footer {
-  padding: 20px;
+  padding: 20px 25px;
   display: flex;
-  gap: 20px;
+  align-items: center;
+  gap: 25px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .footer-icon {
   cursor: pointer;
-  opacity: 0.7;
+  color: white;
+  text-decoration: none;
+  font-size: 1.2rem;
+  opacity: 0.6;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
 }
 
 .footer-icon:hover {
   opacity: 1;
+  transform: rotate(15deg) scale(1.1);
 }

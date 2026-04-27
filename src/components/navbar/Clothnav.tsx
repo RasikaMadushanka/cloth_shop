@@ -1,21 +1,23 @@
 import React from 'react';
-import './Clothnav.css';
+import "./Clothnav.css"
+import { Link, useLocation } from 'react-router-dom';
 import { MdDashboard, MdInventory, MdPointOfSale, MdAssessment, MdSettings, MdCheckroom } from "react-icons/md";
 
-// Define the interface for your navigation items
 interface MenuItem {
   name: string;
   icon: React.ReactNode;
-  active?: boolean; // Optional property
+  path: string;
 }
 
 const Navbarasika: React.FC = () => {
+  const location = useLocation();
+
   const menuItems: MenuItem[] = [
-    { name: 'Dashboard', icon: <MdDashboard />, active: true },
-    { name: 'Inventory', icon: <MdInventory /> },
-    { name: 'Sales', icon: <MdPointOfSale /> },
-    { name: 'Reports', icon: <MdAssessment /> },
-    { name: 'Settings', icon: <MdSettings /> }
+    { name: 'Dashboard', icon: <MdDashboard />, path: '/dashboard' },
+    { name: 'Inventory', icon: <MdInventory />, path: '/inventory' },
+    { name: 'Sales', icon: <MdPointOfSale />, path: '/sales' }, 
+    { name: 'Reports', icon: <MdAssessment />, path: '/reports' },
+    { name: 'Settings', icon: <MdSettings />, path: '/settings' }
   ];
 
   return (
@@ -30,18 +32,27 @@ const Navbarasika: React.FC = () => {
 
       <nav className='side_navbar'>
         <ul>
-          {menuItems.map((item, index) => (
-            <li key={index} className={item.active ? 'nav-item active' : 'nav-item'}>
-              <span className="nav-icon">{item.icon}</span>
-              <span className="nav-label">{item.name}</span>
-            </li>
-          ))}
+          {menuItems.map((item, index) => {
+            const isActive = location.pathname === item.path;
+            
+            return (
+              <li key={index}>
+                <Link 
+                  to={item.path} 
+                  className={`nav-item ${isActive ? 'active' : ''}`}
+                >
+                  <span className="nav-icon">{item.icon}</span>
+                  <span className="nav-label">{item.name}</span>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </nav>
 
       <div className="sidebar_footer">
+        <Link to="/settings" className="footer-icon">⚙️</Link>
         <div className="footer-icon">🔄</div>
-        <div className="footer-icon">⚙️</div>
       </div>
     </div>
   );

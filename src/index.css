@@ -1,4 +1,4 @@
-/* index.css */
+@import "tailwindcss";
 :root {
   background-color: #f5f7fb; /* The light grey-blue from your design */
   color-scheme: light;

@@ -1,0 +1,70 @@
+/* General Layout Container */
+.app-wrapper {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Main Content Area */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.3s ease;
+  width: 100%;
+}
+
+/* Padding for the body content */
+.dashboard-body {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dashboard-main-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap; 
+  margin-top: 20px;
+}
+
+.dashboard-main-row > div {
+  flex: 1;
+  min-width: 300px; 
+}
+
+
+
+@media (max-width: 992px) {
+  .app-wrapper {
+    flex-direction: column; /* Sidebar moves to top or becomes hidden */
+  }
+
+  .dashboard-main-row {
+    flex-direction: column;
+  }
+  
+  .dashboard-main-row > div {
+    width: 100%;
+  }
+}
+
+/* Small Mobile Devices */
+@media (max-width: 576px) {
+  .dashboard-body {
+    padding: 10px;
+  }
+  
+  .dashboard-body > div:first-child {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 10px;
+  }
+  
+  .dashboard-body button {
+    width: 100%;
+  }
+}
