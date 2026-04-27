@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Barcode from 'react-barcode';
+import { productApi } from '../../api/Service/apiService';
 
 // --- UPDATED INTERFACES TO MATCH YOUR API DATA ---
 interface Variant {
