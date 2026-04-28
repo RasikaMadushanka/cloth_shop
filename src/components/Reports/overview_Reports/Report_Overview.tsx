@@ -29,10 +29,9 @@ interface StockLog {
   quantityChange: number;
   timestamp: string;
   updateReason: string;
+  // This represents the stock level after the change
+  currentStock?: number;
   variant?: {
-    barcodeId?: string;
-    color?: string;
-    size?: string;
     stockQuantity?: number;
   };
 }
@@ -43,7 +42,7 @@ interface SavedStockReport {
   generatedAt: string;
   reportType: string;
   stockValue: number;
-  soldItemsValue: number | null; 
+  soldItemsValue: number | null;
   totalItemsIn: number;
   totalItemsOut: number;
   totalRevenue: number;
@@ -142,9 +141,8 @@ const Report_Overview: React.FC = () => {
             <button
               key={t}
               onClick={() => setType(t)}
-              className={`px-4 py-1.5 border rounded transition-colors font-medium ${
-                type === t ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 hover:bg-gray-100'
-              }`}
+              className={`px-4 py-1.5 border rounded transition-colors font-medium ${type === t ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 hover:bg-gray-100'
+                }`}
             >
               {t}
             </button>
@@ -212,36 +210,47 @@ const Report_Overview: React.FC = () => {
 
       {/* LOGS & CHART */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* LOGS TABLE SECTION */}
         <div className="bg-white p-4 rounded shadow">
-          <h2 className="font-bold text-purple-600 mb-3 text-lg">📋 Stock Logs</h2>
+          <h2 className="font-bold text-purple-600 mb-3 text-lg">📋 Recent Stock Logs</h2>
           <div className="max-h-[300px] overflow-y-auto">
-            <table className="w-full text-xs border text-left">
+            <table className="w-full text-xs border text-left border-collapse">
               <thead className="bg-gray-50 sticky top-0">
                 <tr>
                   <th className="p-2 border">No.</th>
                   <th className="p-2 border">Barcode</th>
-                  <th className="p-2 border">Change</th>
+                  <th className="p-2 border text-center">Change</th>
+                  <th className="p-2 border text-center font-semibold text-blue-700">Now Stock</th>
                   <th className="p-2 border">Reason</th>
                   <th className="p-2 border">Time</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedLogs.map((l, index) => (
-                  <tr key={`${l.logId}-${index}`} className="hover:bg-gray-50">
+                  <tr key={`${l.logId}-${index}`} className="hover:bg-gray-50 transition-colors">
                     <td className="p-2 border text-gray-400">{index + 1}</td>
                     <td className="p-2 border font-mono">{l.barcodeId}</td>
-                    <td className={`p-2 border font-bold ${l.quantityChange < 0 ? 'text-red-500' : 'text-green-600'}`}>
-                      {l.quantityChange > 0 ? `+{l.quantityChange}` : l.quantityChange}
+
+                    {/* Change Column */}
+                    <td className={`p-2 border text-center font-bold ${l.quantityChange < 0 ? 'text-red-500' : 'text-green-600'}`}>
+                      {l.quantityChange > 0 ? `+${l.quantityChange}` : l.quantityChange}
                     </td>
-                    <td className="p-2 border">{l.updateReason}</td>
-                    <td className="p-2 border text-gray-500">{new Date(l.timestamp).toLocaleTimeString()}</td>
+
+                    {/* ✅ NEW: Now Stock Column */}
+                    <td className="p-2 border text-center font-bold bg-blue-50/30 text-blue-800">
+                      {l.variant?.stockQuantity ?? l.currentStock ?? 0}
+                    </td>
+
+                    <td className="p-2 border text-gray-600 italic">{l.updateReason}</td>
+                    <td className="p-2 border text-gray-500 whitespace-nowrap">
+                      {new Date(l.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </div>
-
         <div className="bg-white p-4 rounded shadow">
           <h2 className="font-bold text-gray-700 mb-4">Stock vs Revenue Visual</h2>
           <ResponsiveContainer width="100%" height={280}>

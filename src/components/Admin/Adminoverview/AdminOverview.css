@@ -1,102 +1,139 @@
 .right_panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    background: #f6f7fb;
 }
 
-.overview_card {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid #f0f0f0;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+/* ================= CARD ================= */
+
+.card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
 }
 
-.overview_card_header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+/* ================= HEADER ================= */
+
+.card_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
 }
 
-.overview_card_header h4 {
-  margin: 0;
-  font-size: 0.95rem;
-  color: #333;
+.card_header h4 {
+    font-size: 16px;
+    font-weight: 600;
 }
 
-.uelv_link {
-  font-size: 0.75rem;
-  color: #3498db;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
+.link {
+    color: #4f46e5;
+    font-size: 13px;
+    cursor: pointer;
 }
 
-/* Bar Chart Styles */
-.bar_chart_container {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end; /* Keeps bars at the bottom */
-  height: 150px; /* Essential: The chart needs a fixed height */
-  padding: 10px 0;
+.menu {
+    font-size: 20px;
+    cursor: pointer;
 }
 
-.bar_wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 30px; /* Fixed width for each bar column */
-  height: 100%; /* Important for alignment */
-  justify-content: flex-end;
+/* ================= CHART ================= */
+
+.chart {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    height: 180px;
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+}
+
+.bar_box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
 }
 
 .bar {
-  width: 100%; /* Fills the bar_wrapper width */
-  background-color: #3498db; /* The blue color from your design */
-  border-radius: 4px 4px 0 0;
-  transition: height 0.3s ease;
-  min-height: 2px; /* Ensures even 0% data shows a tiny sliver */
+    width: 16px;
+    background: linear-gradient(#4f46e5, #7c3aed);
+    border-radius: 6px;
 }
 
-.bar_label {
-  font-size: 10px;
-  color: #888;
-  margin-top: 8px;
+/* ================= TABLE ================= */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
 }
 
-/* Table Styles */
-.stock_table {
-  width: 100%;
-  border-collapse: collapse;
+th {
+    text-align: left;
+    font-size: 13px;
+    padding: 10px;
+    background: #f3f4f6;
 }
 
-.stock_table th {
-  text-align: left;
-  font-size: 0.7rem;
-  color: #bbb;
-  padding-bottom: 8px;
-  text-transform: uppercase;
+td {
+    padding: 10px;
+    font-size: 13px;
+    border-bottom: 1px solid #eee;
 }
 
-.stock_table td {
-  padding: 10px 0;
-  font-size: 0.8rem;
-  border-bottom: 1px solid #f9f9f9;
-  color: #444;
+.sku {
+    font-family: monospace;
+    color: #888;
 }
 
-.sku_fade {
-  color: #aaa;
+/* ================= STOCK COLORS ================= */
+
+.warn {
+    color: #f59e0b;
+    font-weight: 600;
 }
 
-.stock_val {
-  font-weight: 700;
-  text-align: right;
+.danger {
+    color: #ef4444;
+    font-weight: 700;
 }
 
-.check_mark {
-  color: #27ae60;
-  margin-left: 4px;
+/* ================= INFO ================= */
+
+.info {
+    padding: 10px;
+    color: #666;
+}
+
+.success {
+    color: green;
+}
+
+/* ================= SUMMARY ================= */
+
+.summary .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.summary .stats div {
+    text-align: center;
+    padding: 10px;
+    background: #f9fafb;
+    border-radius: 10px;
+}
+
+.summary h3 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.summary p {
+    margin: 0;
+    font-size: 12px;
+    color: #666;
 }

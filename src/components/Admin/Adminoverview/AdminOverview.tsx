@@ -1,81 +1,216 @@
+import { useEffect, useMemo, useState } from "react";
 import { MdKeyboardArrowRight } from "react-icons/md";
 import "./AdminOverview.css";
+import { productApi } from "../../api/Service/apiService";
 
-interface SalesData {
-    day: string;
-    height: string;
+/* ================= TYPES ================= */
+
+interface Variant {
+    barcodeId: string;
+    color: string;
+    size: string;
+    sku: string;
+    stockQuantity: number;
+}
+
+interface Product {
+    productId: number;
+    productName: string;
+    category: string;
+    basePrice: number;
+    discountedPrice: number;
+    discountPercentage: number;
+    totalQuantity: number;
+    stockStatus: string;
+    availableColors: string[];
+    availableSizes: string[];
+    variants: Variant[];
 }
 
 interface LowStockItem {
-    name: string;
+    productName: string;
+    category: string;
     sku: string;
+    color: string;
+    size: string;
     stock: number;
 }
 
+/* ================= COMPONENT ================= */
+
 function AdminOverview() {
-    const salesData: SalesData[] = [
-        { day: "Mon", height: "40%" }, 
-        { day: "Tue", height: "60%" },
-        { day: "Wed", height: "30%" }, 
-        { day: "Thu", height: "75%" },
-        { day: "Fri", height: "50%" }, 
-        { day: "Sat", height: "90%" },
-        { day: "Sun", height: "70%" }
+    const [products, setProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    /* ================= FETCH DATA ================= */
+    useEffect(() => {
+        const load = async () => {
+            try {
+                setLoading(true);
+                const res = await productApi.getAll();
+                setProducts(res.data);
+            } catch (err) {
+                console.error("API Error:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        load();
+    }, []);
+
+    /* ================= LOW STOCK ENGINE ================= */
+    const lowStock = useMemo(() => {
+        const list: LowStockItem[] = [];
+
+        products.forEach((p) => {
+            p.variants.forEach((v) => {
+                if (v.stockQuantity <= 10) {
+                    list.push({
+                        productName: p.productName,
+                        category: p.category,
+                        sku: v.sku,
+                        color: v.color,
+                        size: v.size,
+                        stock: v.stockQuantity
+                    });
+                }
+            });
+        });
+
+        return list;
+    }, [products]);
+
+    /* ================= SUMMARY ================= */
+    const summary = useMemo(() => {
+        const totalVariants = products.reduce(
+            (acc, p) => acc + p.variants.length,
+            0
+        );
+
+        const totalStock = products.reduce(
+            (acc, p) => acc + p.totalQuantity,
+            0
+        );
+
+        return { totalVariants, totalStock };
+    }, [products]);
+
+    /* ================= SALES DEMO ================= */
+    const sales = [
+        { day: "Mon", val: 35 },
+        { day: "Tue", val: 55 },
+        { day: "Wed", val: 25 },
+        { day: "Thu", val: 80 },
+        { day: "Fri", val: 60 },
+        { day: "Sat", val: 95 },
+        { day: "Sun", val: 70 }
     ];
 
-    const lowStock: LowStockItem[] = [
-        { name: "Black T-Shirt", sku: "123456789012", stock: 50 },
-        { name: "Blue Jeans", sku: "987654321098", stock: 35 },
-        { name: "Red Dress", sku: "456789012345", stock: 5 },
-        { name: "Grey Hoodie", sku: "456789012345", stock: 28 },
-    ];
+    /* ================= UI ================= */
 
     return (
         <div className="right_panel">
-            <div className="overview_card">
-                <div className="overview_card_header">
-                    <h4>Sales Overview</h4>
-                    <span className="uelv_link">
-                        Uelv ID <MdKeyboardArrowRight />
+
+            {/* ================= SALES ================= */}
+            <div className="card">
+                <div className="card_header">
+                    <h4> Overview</h4>
+                    <span className="link">
+                        Report <MdKeyboardArrowRight />
                     </span>
                 </div>
-                {/* Check this class name against your CSS */}
-                <div className="bar_chart_container">
-                    {salesData.map((item, i) => (
-                        <div key={i} className="bar_wrapper">
-                            <div className="bar" style={{ height: item.height }}></div>
-                            <span className="bar_label">{item.day}</span>
+
+                <div className="chart">
+                    {sales.map((s, i) => (
+                        <div key={i} className="bar_box">
+                            <div
+                                className="bar"
+                                style={{ height: `${s.val}%` }}
+                            />
+                            <span>{s.day}</span>
                         </div>
                     ))}
                 </div>
             </div>
 
-            <div className="overview_card">
-                <div className="overview_card_header">
-                    <h4>Low Stock Items</h4>
-                    <span className="dots_menu">...</span>
+            {/* ================= LOW STOCK ================= */}
+            <div className="card">
+                <div className="card_header">
+                    <h4>Low Stock Products</h4>
+                    <span className="menu">⋯</span>
                 </div>
-                <table className="stock_table">
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>SKU</th>
-                            <th>Stock</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {lowStock.map((item, index) => (
-                            <tr key={index}>
-                                <td>{item.name}</td>
-                                <td className="sku_fade">{item.sku.substring(0, 8)}...</td>
-                                <td className="stock_val">
-                                    {item.stock} <span className="check_mark">✓</span>
-                                </td>
+
+                {loading ? (
+                    <div className="info">Loading products...</div>
+                ) : lowStock.length === 0 ? (
+                    <div className="info success">All stocks are healthy ✔</div>
+                ) : (
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>SKU</th>
+                                <th>Color</th>
+                                <th>Size</th>
+                                <th>Stock</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+
+                        <tbody>
+                            {lowStock.map((i, idx) => (
+                                <tr key={idx}>
+                                    <td>{i.productName}</td>
+                                    <td>{i.category}</td>
+                                    <td className="sku">{i.sku}</td>
+                                    <td>{i.color}</td>
+                                    <td>{i.size}</td>
+                                    <td
+                                        className={
+                                            i.stock <= 5
+                                                ? "danger"
+                                                : "warn"
+                                        }
+                                    >
+                                        {i.stock}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
             </div>
+
+            {/* ================= SUMMARY ================= */}
+            <div className="card summary">
+                <div className="card_header">
+                    <h4>Inventory Summary</h4>
+                </div>
+
+                <div className="stats">
+                    <div>
+                        <h3>{products.length}</h3>
+                        <p>Products</p>
+                    </div>
+
+                    <div>
+                        <h3>{summary.totalVariants}</h3>
+                        <p>Variants</p>
+                    </div>
+
+                    <div>
+                        <h3>{summary.totalStock}</h3>
+                        <p>Total Stock</p>
+                    </div>
+
+                    <div>
+                        <h3>{lowStock.length}</h3>
+                        <p>Low Stock</p>
+                    </div>
+                </div>
+            </div>
+
         </div>
     );
 }
