@@ -17,10 +17,20 @@ export const productApi = {
 
 // 2. STOCK CONTROLLER (Matches Stock_Controller.java)
 export const stockApi = {
-  update: (data: any) => api.post('/stock/update', data),
-  getDailyReport: (date: string) => api.get(`/stock/reports/daily?date=${date}`),
-  getMonthlyReport: (date: string) => api.get(`/stock/reports/monthly?date=${date}`),
-  getYearlyReport: (date: string) => api.get(`/stock/reports/Yearly?date=${date}`),
+  // Update stock (Restock)
+  update: (data: any) => api.post('/api/stock/update', data),
+  
+  // Real-time Report Generation
+  getDailyReport: (date: string) => api.get(`/api/stock/reports/daily?date=${date}`),
+  getMonthlyReport: (date: string) => api.get(`/api/stock/reports/monthly?date=${date}`),
+  getYearlyReport: (date: string) => api.get(`/api/stock/reports/Yearly?date=${date}`),
+  
+  // --- NEW: Database Records ---
+  // Get all historical report entities from the database
+  getAllSavedReports: () => api.get('/api/stock/reports/all'),
+  
+  // Get all stock movement logs (The table you shared)
+  getAllLogs: () => api.get('/api/stock/logs/all'),
 };
 
 // 3. SALES CONTROLLER (Matches SaleController.java)

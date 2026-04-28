@@ -1,180 +1,259 @@
-import React from 'react';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, AreaChart, Area 
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 
-// --- Interfaces ---
-interface StockMovement {
-  sku: string;
-  name: string;
-  opening: number;
-  received: number;
-  sold: number;
-  closing: number;
-  value: string;
+import { stockApi, salesApi } from '../../api/Service/apiService';
+
+// ---------------- TYPES ----------------
+interface StockReportData {
+  reportDate: string;
+  stockValue: number;
+  totalItemsIn: number;
+  totalItemsOut: number;
+  totalRevenue: number;
+  totalDiscountGiven: number;
 }
 
-interface SellingDetail {
-  orderId: string;
+interface SalesReportData {
   date: string;
-  customer: string;
-  items: number;
-  total: string;
-  method: 'Cash' | 'Card' | 'Online';
+  totalRevenue: number;
+  totalDiscountGiven: number;
+  totalItemsIn: number;
+  totalItemsOut: number;
 }
 
-// --- New Mock Data ---
-const STOCK_REPORT: StockMovement[] = [
-  { sku: 'TSH-001', name: 'Black T-Shirt', opening: 150, received: 100, sold: 195, closing: 55, value: '$550.00' },
-  { sku: 'JNS-002', name: 'Blue Jeans', opening: 200, received: 50, sold: 180, closing: 70, value: '$1,400.00' },
-  { sku: 'HOD-003', name: 'Grey Hoodie', opening: 80, received: 120, sold: 160, closing: 40, value: '$800.00' },
-  { sku: 'DRS-004', name: 'Red Dress', opening: 50, received: 150, sold: 150, closing: 50, value: '$1,250.00' },
-];
+interface StockLog {
+  logId: number;
+  barcodeId: string;
+  quantityChange: number;
+  timestamp: string;
+  updateReason: string;
+  variant?: {
+    barcodeId?: string;
+    color?: string;
+    size?: string;
+    stockQuantity?: number;
+  };
+}
 
-const SELLING_REPORT: SellingDetail[] = [
-  { orderId: '#ORD-9901', date: '2024-04-28', customer: 'John Doe', items: 3, total: '$120.00', method: 'Card' },
-  { orderId: '#ORD-9902', date: '2024-04-28', customer: 'Sarah Smith', items: 1, total: '$45.00', method: 'Cash' },
-  { orderId: '#ORD-9903', date: '2024-04-29', customer: 'Mike Ross', items: 5, total: '$310.00', method: 'Online' },
-  { orderId: '#ORD-9904', date: '2024-04-30', customer: 'Emma Watson', items: 2, total: '$85.00', method: 'Card' },
-];
+// ✅ UPDATED INTERFACE WITH ALL ATTRIBUTES FROM YOUR JSON
+interface SavedStockReport {
+  reportId: number;
+  reportDate: string;
+  generatedAt: string;
+  reportType: string;
+  stockValue: number;
+  soldItemsValue: number | null; // Added
+  totalItemsIn: number;
+  totalItemsOut: number;
+  totalRevenue: number;
+  totalDiscountGiven: number;
+}
 
-const COLORS = ['#1e40af', '#bfdbfe'];
-const SALES_DATA = [
-  { day: 'W1', sales: 4200 }, { day: 'W2', sales: 5100 }, { day: 'W3', sales: 4800 }, { day: 'W4', sales: 6200 }
-];
+type ReportType = 'DAILY' | 'MONTHLY' | 'YEARLY';
 
 const Report_Overview: React.FC = () => {
+  const [type, setType] = useState<ReportType>('DAILY');
+  const [stock, setStock] = useState<StockReportData | null>(null);
+  const [sales, setSales] = useState<SalesReportData | null>(null);
+  const [logs, setLogs] = useState<StockLog[]>([]);
+  const [savedReports, setSavedReports] = useState<SavedStockReport[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const today = new Date().toISOString().split('T')[0];
+
+        let stockRes;
+        let salesRes;
+
+        if (type === 'DAILY') {
+          stockRes = await stockApi.getDailyReport(today);
+          salesRes = await salesApi.getSalesReport('DAILY', today);
+        } else if (type === 'MONTHLY') {
+          stockRes = await stockApi.getMonthlyReport(today);
+          salesRes = await salesApi.getSalesReport('MONTHLY', today);
+        } else {
+          stockRes = await stockApi.getYearlyReport(today);
+          salesRes = await salesApi.getSalesReport('YEARLY', today);
+        }
+
+        const logRes = await stockApi.getAllLogs();
+        const savedRes = await stockApi.getAllSavedReports();
+
+        const mappedLogs: StockLog[] = (logRes.data || []).map((log: any) => ({
+          logId: log.LOG_ID,
+          barcodeId: log.BARCODE_ID,
+          quantityChange: log.QUANTITY_CHANGE,
+          timestamp: log.TIMESTAMP,
+          updateReason: log.UPDATE_REASON,
+          variant: log.VARIANT_ID
+        }));
+
+        setStock(stockRes.data);
+        setSales(salesRes.data);
+        setLogs(mappedLogs);
+        setSavedReports(savedRes.data || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, [type]);
+
+  // ✅ SORTED REPORTS (Latest First based on generatedAt)
+  const sortedReports = useMemo(() => {
+    return [...savedReports].sort((a, b) => {
+      const timeA = a.generatedAt ? new Date(a.generatedAt.replace(/-/g, "/")).getTime() : 0;
+      const timeB = b.generatedAt ? new Date(b.generatedAt.replace(/-/g, "/")).getTime() : 0;
+      return timeB - timeA;
+    });
+  }, [savedReports]);
+
+  // ✅ SORTED LOGS (Latest First)
+  const sortedLogs = useMemo(() => {
+    return [...logs].sort((a, b) => {
+      const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+      const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+      return timeB - timeA;
+    });
+  }, [logs]);
+
+  if (loading) return <div className="p-6 font-bold text-gray-500">Loading Report...</div>;
+  if (!stock || !sales) return <div className="p-6 text-red-500">No Data Found</div>;
+
+  const chartData = [
+    { name: 'Stock', value: stock.stockValue },
+    { name: 'Revenue', value: sales.totalRevenue }
+  ];
+
   return (
-    <div className="p-4 md:p-8 bg-[#f8fafc] min-h-screen text-slate-800 font-sans">
-      
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <nav className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Analytics Dashboard</nav>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 uppercase">Monthly Operations Report</h1>
-        </div>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* HEADER */}
+      <div className="flex justify-between mb-6">
+        <h1 className="text-2xl font-bold">{type} REPORT OVERVIEW</h1>
         <div className="flex gap-2">
-          <button className="bg-white border border-slate-200 px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 transition-all">Print Report</button>
-          <button className="bg-[#1e40af] text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-800 transition-all text-xs font-bold">Download CSV</button>
+          {(['DAILY', 'MONTHLY', 'YEARLY'] as ReportType[]).map((t) => (
+            <button
+              key={t}
+              onClick={() => setType(t)}
+              className={`px-4 py-1.5 border rounded transition-colors font-medium ${
+                type === t ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              {t}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Top Row: Visual Analytics */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Revenue Growth (Weekly)</h2>
-          <div className="h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={SALES_DATA}>
-                <defs>
-                  <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                <Tooltip />
-                <Area type="monotone" dataKey="sales" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
-              </AreaChart>
-            </ResponsiveContainer>
+      {/* SUMMARY BOXES */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="bg-white p-5 rounded-lg shadow border-t-4 border-blue-600">
+          <h2 className="font-bold text-blue-600 text-lg mb-2">📦 Stock Status</h2>
+          <div className="grid grid-cols-3 gap-2 text-sm">
+            <div><p className="text-gray-400">Value</p><p className="font-bold">${stock.stockValue.toLocaleString()}</p></div>
+            <div><p className="text-gray-400">Items In</p><p className="font-bold text-green-600">{stock.totalItemsIn}</p></div>
+            <div><p className="text-gray-400">Items Out</p><p className="font-bold text-red-600">{stock.totalItemsOut}</p></div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center items-center text-center">
-            <div className="mb-4">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inventory Status</p>
-                <h3 className="text-2xl font-black text-slate-900">70% Turnover</h3>
-            </div>
-            <div className="h-40 w-40 relative">
-                <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                        <Pie data={[{v:70}, {v:30}]} innerRadius={50} outerRadius={70} dataKey="v" startAngle={90} endAngle={-270}>
-                            <Cell fill="#1e40af" /><Cell fill="#f1f5f9" />
-                        </Pie>
-                    </PieChart>
-                </ResponsiveContainer>
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-4 w-full border-t pt-4">
-                <div><p className="text-[10px] text-slate-400 font-bold uppercase">Sold</p><p className="font-bold">1,240</p></div>
-                <div><p className="text-[10px] text-slate-400 font-bold uppercase">In Stock</p><p className="font-bold">988</p></div>
-            </div>
+        <div className="bg-white p-5 rounded-lg shadow border-t-4 border-green-600">
+          <h2 className="font-bold text-green-600 text-lg mb-2">💰 Sales Summary</h2>
+          <div className="grid grid-cols-3 gap-2 text-sm">
+            <div><p className="text-gray-400">Revenue</p><p className="font-bold">${sales.totalRevenue.toLocaleString()}</p></div>
+            <div><p className="text-gray-400">Sold Qty</p><p className="font-bold">{sales.totalItemsOut}</p></div>
+            <div><p className="text-gray-400">Discount</p><p className="font-bold text-orange-500">${sales.totalDiscountGiven.toLocaleString()}</p></div>
+          </div>
         </div>
       </div>
 
-      {/* --- FULL MONTHLY ITEM STOCK REPORT TABLE --- */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8">
-        <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-          <h2 className="text-sm font-black text-slate-700 uppercase tracking-wider">Full Monthly Item Stock Report</h2>
-          <span className="text-[10px] bg-blue-100 text-blue-700 font-black px-2 py-1 rounded">Total Items: 142</span>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="text-[10px] uppercase text-slate-400 font-black border-b bg-slate-50/30">
-                <th className="p-4">SKU</th>
-                <th className="p-4">Item Name</th>
-                <th className="p-4 text-center">Opening Stock</th>
-                <th className="p-4 text-center">Received (+)</th>
-                <th className="p-4 text-center">Sold (-)</th>
-                <th className="p-4 text-center">Closing Stock</th>
-                <th className="p-4 text-right">Value</th>
+      {/* ✅ FULL ATTRIBUTE SAVED REPORT TABLE */}
+      <div className="bg-white p-4 rounded shadow mb-6 overflow-x-auto">
+        <h2 className="font-bold text-indigo-600 mb-4 text-lg">📊 Historical Reports (All Attributes)</h2>
+        <table className="w-full text-[13px] border-collapse text-left">
+          <thead className="bg-gray-100 text-gray-700">
+            <tr>
+              <th className="p-2 border">No.</th>
+              <th className="p-2 border">Generated At</th>
+              <th className="p-2 border">Date</th>
+              <th className="p-2 border">Type</th>
+              <th className="p-2 border">Stock Value</th>
+              <th className="p-2 border">Sold Val</th>
+              <th className="p-2 border">In</th>
+              <th className="p-2 border">Out</th>
+              <th className="p-2 border">Revenue</th>
+              <th className="p-2 border">Disc.</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedReports.map((r, index) => (
+              <tr key={`${r.reportId}-${index}`} className="border hover:bg-blue-50/50 transition-colors">
+                <td className="p-2 border font-bold text-gray-400">{index + 1}</td>
+                <td className="p-2 border whitespace-nowrap">{r.generatedAt}</td>
+                <td className="p-2 border whitespace-nowrap">{r.reportDate}</td>
+                <td className="p-2 border text-center uppercase font-bold text-[10px]">{r.reportType}</td>
+                <td className="p-2 border font-medium">Rs.{r.stockValue.toLocaleString()}</td>
+                <td className="p-2 border text-gray-500">Rs.{r.soldItemsValue?.toLocaleString() ?? '0'}</td>
+                <td className="p-2 border text-green-600">+{r.totalItemsIn}</td>
+                <td className="p-2 border text-red-500">-{r.totalItemsOut}</td>
+                <td className="p-2 border font-bold text-green-700">Rs.{r.totalRevenue.toLocaleString()}</td>
+                <td className="p-2 border text-orange-600">Rs{r.totalDiscountGiven.toLocaleString()}</td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50 text-xs">
-              {STOCK_REPORT.map((item) => (
-                <tr key={item.sku} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="p-4 font-mono text-slate-400">{item.sku}</td>
-                  <td className="p-4 font-bold text-slate-700">{item.name}</td>
-                  <td className="p-4 text-center">{item.opening}</td>
-                  <td className="p-4 text-center text-green-600 font-bold">+{item.received}</td>
-                  <td className="p-4 text-center text-red-500 font-bold">-{item.sold}</td>
-                  <td className="p-4 text-center">
-                    <span className={`font-black ${item.closing < 50 ? 'text-orange-500' : 'text-slate-900'}`}>{item.closing}</span>
-                  </td>
-                  <td className="p-4 text-right font-black text-slate-900">{item.value}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {/* --- FULL MONTHLY SELLING REPORT TABLE --- */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-          <h2 className="text-sm font-black text-slate-700 uppercase tracking-wider">Full Monthly Selling Report</h2>
-          <button className="text-blue-600 text-[10px] font-black uppercase hover:underline">View All Transactions</button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="text-[10px] uppercase text-slate-400 font-black border-b bg-slate-50/30">
-                <th className="p-4">Order ID</th>
-                <th className="p-4">Date</th>
-                <th className="p-4">Customer</th>
-                <th className="p-4 text-center">Items</th>
-                <th className="p-4 text-center">Method</th>
-                <th className="p-4 text-right">Total Amount</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50 text-xs">
-              {SELLING_REPORT.map((sale) => (
-                <tr key={sale.orderId} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="p-4 font-bold text-blue-600">{sale.orderId}</td>
-                  <td className="p-4 text-slate-500">{sale.date}</td>
-                  <td className="p-4 font-semibold text-slate-700">{sale.customer}</td>
-                  <td className="p-4 text-center">{sale.items}</td>
-                  <td className="p-4 text-center">
-                    <span className="bg-slate-100 px-2 py-1 rounded text-[9px] font-bold text-slate-600">{sale.method}</span>
-                  </td>
-                  <td className="p-4 text-right font-black text-slate-900 text-sm">{sale.total}</td>
+      {/* LOGS & CHART */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="font-bold text-purple-600 mb-3 text-lg">📋 Stock Logs</h2>
+          <div className="max-h-[300px] overflow-y-auto">
+            <table className="w-full text-xs border text-left">
+              <thead className="bg-gray-50 sticky top-0">
+                <tr>
+                  <th className="p-2 border">No.</th>
+                  <th className="p-2 border">Barcode</th>
+                  <th className="p-2 border">Change</th>
+                  <th className="p-2 border">Reason</th>
+                  <th className="p-2 border">Time</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {sortedLogs.map((l, index) => (
+                  <tr key={`${l.logId}-${index}`} className="hover:bg-gray-50">
+                    <td className="p-2 border text-gray-400">{index + 1}</td>
+                    <td className="p-2 border font-mono">{l.barcodeId}</td>
+                    <td className={`p-2 border font-bold ${l.quantityChange < 0 ? 'text-red-500' : 'text-green-600'}`}>
+                      {l.quantityChange > 0 ? `+{l.quantityChange}` : l.quantityChange}
+                    </td>
+                    <td className="p-2 border">{l.updateReason}</td>
+                    <td className="p-2 border text-gray-500">{new Date(l.timestamp).toLocaleTimeString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="font-bold text-gray-700 mb-4">Stock vs Revenue Visual</h2>
+          <ResponsiveContainer width="100%" height={280}>
+            <AreaChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Area type="monotone" dataKey="value" stroke="#2563eb" fill="#93c5fd" fillOpacity={0.4} strokeWidth={3} />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>
