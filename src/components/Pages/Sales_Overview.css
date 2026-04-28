@@ -1,0 +1,42 @@
+/* 1. This prevents the whole screen from bouncing */
+.app-wrapper {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden; 
+  background-color: #f8fafc;
+}
+
+/* 2. This allows the sidebar to stay fixed while the right side scrolls */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Must be 100vh */
+  overflow-y: auto; /* THIS ENABLES SCROLLING FOR ALL PAGES */
+  background-color: #f8fafc;
+}
+
+/* 3. Add padding to the body so content doesn't touch the edges */
+.reports-body {
+  padding: 24px;
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.reports-header {
+  margin-bottom: 24px;
+}
+
+.reports-header h2 {
+  font-size: 1.8rem;
+  color: #1e293b;
+  margin: 0;
+}
+
+.subtitle {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin: 4px 0 0 0;
+}

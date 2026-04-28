@@ -1,13 +1,9 @@
 .sales-page-container {
-  padding: 24px;
+  /* Remove padding and background here as it's handled by Sales_Overview.css */
   display: flex;
   flex-direction: column;
-  gap: 30px;
-  background-color: #f8fafc;
-  height: 100%;
-  overflow-y: auto;
+  gap: 24px;
 }
-
 .sales-header {
   display: flex;
   justify-content: space-between;
@@ -27,62 +23,24 @@
   border: 1px solid #e2e8f0;
   font-size: 0.9rem;
   color: #64748b;
+  font-weight: 500;
 }
 
-/* KPI Grid */
-.sales-stats-grid {
+/* Main POS Grid System */
+.pos-main-layout {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 20px;
+  grid-template-columns: 1fr 380px; /* Cart takes most space, sidebar is fixed */
+  gap: 24px;
+  align-items: start;
 }
 
-.sales-stat-card {
-  background: white;
-  padding: 24px;
-  border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f1f5f9;
-}
-
-.stat-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.stat-icon {
-  font-size: 1.5rem;
-}
-
-.stat-trend {
-  font-size: 0.8rem;
-  font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 20px;
-}
-
-.stat-trend.up { background: #dcfce7; color: #15803d; }
-.stat-trend.down { background: #fee2e2; color: #b91c1c; }
-
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0;
-}
-
-.stat-label {
-  color: #64748b;
-  font-size: 0.9rem;
-  margin: 4px 0 0 0;
-}
-
-/* Table Section */
+/* Cart Section (Left) */
 .recent-sales-section {
   background: white;
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f1f5f9;
 }
 
 .section-header {
@@ -90,6 +48,18 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+}
+
+.section-header h3 {
+  margin: 0;
+  color: #334155;
+  font-size: 1.1rem;
+}
+
+/* Sales Table Styles */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
 }
 
 .sales-table {
@@ -102,34 +72,196 @@
   padding: 12px;
   border-bottom: 2px solid #f1f5f9;
   color: #64748b;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .sales-table td {
   padding: 16px 12px;
   border-bottom: 1px solid #f1f5f9;
   color: #334155;
+  font-size: 0.95rem;
 }
 
-.status-badge {
-  padding: 4px 10px;
+.barcode-badge {
+  background: #f1f5f9;
+  padding: 4px 8px;
   border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-family: 'Courier New', Courier, monospace;
+  color: #475569;
+  font-weight: 600;
 }
 
-.status-badge.complete {
-  background: #dcfce7;
-  color: #166534;
+/* Checkout Sidebar (Right) */
+.checkout-summary-section {
+  position: sticky;
+  top: 24px;
 }
 
-.export-btn {
-  background: #2563eb;
+.summary-card {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.summary-card h3 {
+  margin: 0 0 16px 0;
+  color: #1e293b;
+  font-size: 1.2rem;
+}
+
+.summary-card hr {
+  border: 0;
+  border-top: 1px solid #f1f5f9;
+  margin: 16px 0;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 16px 0;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.summary-row.total {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 2px dashed #e2e8f0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #2563eb;
+}
+
+/* Inputs & Selects */
+.summary-input {
+  width: 120px;
+  padding: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  text-align: right;
+  font-weight: 600;
+  color: #1e293b;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.summary-input:focus {
+  border-color: #2563eb;
+}
+
+/* Buttons */
+.checkout-btn {
+  width: 100%;
+  background: #10b981;
   color: white;
   border: none;
-  padding: 8px 16px;
+  padding: 18px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 10px;
+}
+
+.checkout-btn:hover {
+  background: #059669;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.checkout-btn:active {
+  transform: scale(0.97);
+}
+
+.clear-btn {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: none;
+  padding: 8px 14px;
   border-radius: 8px;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s;
+}
+
+.clear-btn:hover {
+  background: #fecaca;
+}
+
+/* Responsive Logic */
+@media (max-width: 1024px) {
+  .pos-main-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .checkout-summary-section {
+    position: static;
+  }
+}
+.scan-status {
+    background: #e2e8f0;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #475569;
+    transition: all 0.3s ease;
+}
+
+.scan-status.active {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #166534;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.empty-cart-msg {
+    text-align: center;
+    padding: 60px !important;
+    color: #94a3b8;
+    font-style: italic;
+    font-size: 1.1rem;
+}
+
+.barcode-badge {
+    color: #2563eb;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+.search-bar-container {
+    display: flex;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.manual-search-input {
+    padding: 10px;
+    border: none;
+    outline: none;
+    min-width: 250px;
+}
+
+.search-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: bold;
 }

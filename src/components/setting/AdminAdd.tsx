@@ -1,5 +1,6 @@
-import React, { useState, type ChangeEvent, type FormEvent } from 'react';
+import React, { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import "./AdminAdd.css";
+import { adminApi } from '../api/Service/apiService';
 
 interface AdminDto {
   adminId: number;
@@ -7,28 +8,44 @@ interface AdminDto {
   password?: string;
   role: string;
   fullName: string;
-  nic: string;
-  address: string;
+  NIC: string;      // Matches JSON
+  Address: string;  // Matches JSON
   isActive: boolean;
 }
 
 const AdminManagement: React.FC = () => {
-  // --- MOCK STATIC DATA ---
   const [admins, setAdmins] = useState<AdminDto[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
+
+  // CRITICAL FIX: Initial state keys must match Interface/JSON casing
   const [formData, setFormData] = useState<AdminDto>({
     adminId: 0,
     username: '',
-    password: '', // Be careful with passwords in updates
+    password: '',
     role: 'ROLE_ADMIN',
     fullName: '',
-    nic: '',
-    address: '',
+    NIC: '',        
+    Address: '',    
     isActive: true,
   });
 
-  
+  const fetchAdmins = async () => {
+    try {
+      setLoading(true);
+      const response = await adminApi.getAll();
+      setAdmins(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch admins", error);
+      alert("Error loading admin data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAdmins();
+  }, []);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -36,50 +53,80 @@ const AdminManagement: React.FC = () => {
     setFormData((prev) => ({ ...prev, [name]: val }));
   };
 
-  // --- STATIC CREATE/UPDATE LOGIC ---
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
-    if (isEditMode) {
-      // Update existing
-      setAdmins(prev => prev.map(a => a.adminId === formData.adminId ? formData : a));
-    } else {
-      // Add new with fake ID
-      const newAdmin = { ...formData, adminId: Math.floor(Math.random() * 1000) };
-      setAdmins(prev => [...prev, newAdmin]);
+    try {
+      if (isEditMode) {
+        await adminApi.update(formData.adminId, formData);
+        alert("Admin updated successfully");
+      } else {
+        const { adminId, ...newAdminData } = formData;
+        await adminApi.add(newAdminData as any); 
+        alert("Admin registered successfully!");
+      }
+      resetForm();
+      fetchAdmins();
+    } catch (error) {
+      console.error("Submit error:", error);
+      alert("Failed to save admin. Ensure NIC and Username are unique.");
     }
-    
-    resetForm();
   };
 
-  const handleDelete = (id: number) => {
-    setAdmins(prev => prev.filter(admin => admin.adminId !== id));
+  const handleDelete = async (id: number) => {
+    if (window.confirm("Are you sure you want to delete this admin?")) {
+      try {
+        await adminApi.delete(id);
+        fetchAdmins();
+      } catch (error) {
+        console.error("Delete error:", error);
+        alert("Could not delete the admin.");
+      }
+    }
   };
 
   const handleEdit = (admin: AdminDto) => {
-    setFormData(admin);
+    setFormData({
+      ...admin,
+      password: '', 
+      fullName: admin.fullName || '',
+      username: admin.username || '',
+      NIC: admin.NIC || '',      
+      Address: admin.Address || '' 
+    });
     setIsEditMode(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const resetForm = () => {
     setFormData({
-      adminId: 0, username: '', password: '', role: 'ROLE_ADMIN',
-      fullName: '', nic: '', address: '', isActive: true
+      adminId: 0, 
+      username: '', 
+      password: '', 
+      role: 'ROLE_ADMIN',
+      fullName: '', 
+      NIC: '', 
+      Address: '', 
+      isActive: true
     });
     setIsEditMode(false);
   };
 
+  if (loading) return (
+    <div className="min-h-screen bg-[#0a0f1d] flex items-center justify-center text-blue-400 font-bold">
+      LOADING ADMINS...
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-[#0a0f1d] p-6 lg:p-10 font-sans">
-      <div className="max-w-6xl mx-auto space-y-8">
-        
+      <div className="max-w-7xl mx-auto space-y-8">
+
         {/* Registration Card */}
         <section className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 shadow-2xl">
           <h2 className="text-2xl font-black text-white mb-6 uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
             {isEditMode ? "Edit Administrator" : "Admin Onboarding"}
           </h2>
-          
+
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="flex flex-col gap-2">
               <label className="text-blue-400 text-[10px] font-black uppercase tracking-widest">Full Name</label>
@@ -92,21 +139,28 @@ const AdminManagement: React.FC = () => {
             </div>
 
             <div className="flex flex-col gap-2">
+              <label className="text-blue-400 text-[10px] font-black uppercase tracking-widest">Password</label>
+              <input type="password" name="password" value={formData.password || ''} onChange={handleChange} className="form-input-style" placeholder="••••••••" required={!isEditMode} />
+            </div>
+
+            <div className="flex flex-col gap-2">
               <label className="text-blue-400 text-[10px] font-black uppercase tracking-widest">NIC / ID</label>
-              <input name="nic" value={formData.nic} onChange={handleChange} className="form-input-style" placeholder="95XXXXXXXV" required />
+              {/* FIX: name matches NIC */}
+              <input name="NIC" value={formData.NIC} onChange={handleChange} className="form-input-style" placeholder="95XXXXXXXV" required />
             </div>
 
             <div className="flex flex-col gap-2">
               <label className="text-blue-400 text-[10px] font-black uppercase tracking-widest">Role</label>
-              <select name="role" value={formData.role} onChange={handleChange} className="form-input-style">
+              <select name="role" value={formData.role} onChange={handleChange} className="form-input-style bg-slate-900 border-none outline-none text-white">
                 <option value="ROLE_ADMIN">System Admin</option>
                 <option value="ROLE_MANAGER">Project Manager</option>
               </select>
             </div>
 
-            <div className="flex flex-col gap-2 md:col-span-1 lg:col-span-2">
+            <div className="flex flex-col gap-2">
               <label className="text-blue-400 text-[10px] font-black uppercase tracking-widest">Address</label>
-              <input name="address" value={formData.address} onChange={handleChange} className="form-input-style" placeholder="Panadura, Sri Lanka" />
+              {/* FIX: name matches Address */}
+              <input name="Address" value={formData.Address} onChange={handleChange} className="form-input-style" placeholder="Panadura, Sri Lanka" />
             </div>
 
             <div className="lg:col-span-3 flex items-center justify-between mt-4">
@@ -114,7 +168,7 @@ const AdminManagement: React.FC = () => {
                 <input type="checkbox" name="isActive" checked={formData.isActive} onChange={handleChange} className="w-5 h-5 accent-cyan-500 bg-slate-800" />
                 <span className="text-white text-sm font-bold">Account Active</span>
               </div>
-              
+
               <div className="flex gap-4">
                 {isEditMode && (
                   <button type="button" onClick={resetForm} className="px-6 py-3 bg-slate-800 text-slate-400 rounded-xl font-bold hover:text-white transition-all">CANCEL</button>
@@ -132,8 +186,11 @@ const AdminManagement: React.FC = () => {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-white/5 text-blue-300 text-[10px] font-black uppercase tracking-[0.2em]">
+                <th className="p-6">ID</th>
                 <th className="p-6">Personnel</th>
+                <th className="p-6">NIC</th>
                 <th className="p-6">Role</th>
+                <th className="p-6">Address</th>
                 <th className="p-6">Status</th>
                 <th className="p-6 text-right">Operations</th>
               </tr>
@@ -142,14 +199,31 @@ const AdminManagement: React.FC = () => {
               {admins.map((admin) => (
                 <tr key={admin.adminId} className="hover:bg-white/[0.02] transition-all group">
                   <td className="p-6">
+                    <span className="text-cyan-500 font-mono font-bold">
+                      #{admin.adminId.toString().padStart(3, '0')}
+                    </span>
+                  </td>
+                  <td className="p-6">
                     <div className="flex flex-col">
                       <span className="text-white font-bold">{admin.fullName}</span>
                       <span className="text-[11px] opacity-50">@{admin.username}</span>
                     </div>
                   </td>
                   <td className="p-6">
+                    <span className="text-xs text-slate-300">
+                        {/* Display NIC */}
+                        {admin.NIC || 'N/A'}
+                    </span>
+                  </td>
+                  <td className="p-6">
                     <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-bold border border-blue-500/20">
                       {admin.role.replace("ROLE_", "")}
+                    </span>
+                  </td>
+                  <td className="p-6">
+                    <span className="text-[12px] text-slate-300 italic">
+                      {/* Display Address */}
+                      {admin.Address || 'N/A'}
                     </span>
                   </td>
                   <td className="p-6">

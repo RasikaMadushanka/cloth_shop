@@ -1,103 +1,167 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './sales.css';
+import { salesApi, productApi } from '../api/Service/apiService';
 
-// Define the shape of our stats data
-interface WeeklyStat {
-  label: string;
-  value: string;
-  icon: string;
-  trend: string;
-}
-
-// Define the shape of a transaction
-interface Transaction {
-  id: string;
-  items: string;
-  payment: 'Cash' | 'Card' | 'Online';
-  total: string;
-  status: 'Complete' | 'Pending' | 'Cancelled';
+interface SaleItem {
+    barcodeId: string;
+    productName: string;
+    quantity: number;
+    unitPrice: number;
 }
 
 const Sales: React.FC = () => {
-  // Type-safe mock data
-  const weeklyStats: WeeklyStat[] = [
-    { label: "Weekly Revenue", value: "$8,450.00", icon: "📈", trend: "+12.5%" },
-    { label: "Items Sold", value: "342", icon: "📦", trend: "+8%" },
-    { label: "Average Order", value: "$24.70", icon: "💳", trend: "-2%" },
-    { label: "New Customers", value: "18", icon: "👥", trend: "+4%" },
-  ];
+    const [items, setItems] = useState<SaleItem[]>([]);
+    const [discount, setDiscount] = useState<number>(0);
+    const [paymentMethod, setPaymentMethod] = useState<string>('CASH');
+    const [buffer, setBuffer] = useState<string>('');
+    const [manualSearch, setManualSearch] = useState<string>('');
 
-  const transactions: Transaction[] = [
-    { id: "#12548", items: "Blue Jeans (x2)", payment: "Cash", total: "$80.00", status: "Complete" },
-    { id: "#12547", items: "Black T-Shirt (x1)", payment: "Card", total: "$20.00", status: "Complete" },
-  ];
+    const playSuccessBeep = useCallback(() => {
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/700/700-preview.mp3');
+        audio.play().catch(() => {});
+    }, []);
 
-  return (
-    <div className="sales-page-container">
-      <div className="sales-header">
-        <h1>Sales Overview</h1>
-        <div className="date-picker">
-          <span>This Week: April 09 - April 15</span>
-        </div>
-      </div>
+    const processBarcode = useCallback(async (barcode: string) => {
+        const cleanInput = String(barcode).trim();
+        if (!cleanInput) return;
 
-      {/* KPI Cards Grid */}
-      <div className="sales-stats-grid">
-        {weeklyStats.map((stat, index) => (
-          <div key={index} className="sales-stat-card">
-            <div className="stat-header">
-              <span className="stat-icon">{stat.icon}</span>
-              <span className={`stat-trend ${stat.trend.startsWith('+') ? 'up' : 'down'}`}>
-                {stat.trend}
-              </span>
+        try {
+            // Fetch all products from your ProductController
+            const response = await productApi.getAll();
+            const databaseItems = response.data;
+
+            // FIX: Match against 'id' or 'barcode' fields found in your console log
+            const product = databaseItems.find((p: any) => 
+                (p.id && String(p.id).trim() === cleanInput) || 
+                (p.barcode && String(p.barcode).trim() === cleanInput) ||
+                (p.barcodeId && String(p.barcodeId).trim() === cleanInput)
+            );
+
+            if (product) {
+                playSuccessBeep();
+                
+                // MAP: Database 'basePrice' (from log) to Frontend 'unitPrice'
+                const finalBarcode = String(product.barcode || product.id || product.barcodeId);
+                const finalPrice = product.basePrice || product.price || 0;
+
+                setItems(prev => {
+                    const exists = prev.find(i => i.barcodeId === finalBarcode);
+                    
+                    if (exists) {
+                        return prev.map(i => i.barcodeId === finalBarcode 
+                            ? { ...i, quantity: i.quantity + 1 } : i);
+                    }
+
+                    return [...prev, { 
+                        barcodeId: finalBarcode, 
+                        productName: product.productName || "Product", 
+                        quantity: 1, 
+                        unitPrice: finalPrice 
+                    }];
+                });
+                setManualSearch(''); 
+            } else {
+                alert(`Product with barcode [${cleanInput}] not found in Database.`);
+            }
+        } catch (err) {
+            console.error("Fetch Error:", err);
+            alert("Database connection error");
+        }
+    }, [playSuccessBeep]);
+
+    // --- KEYBOARD LISTENER ---
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
+
+            if (e.key === 'Enter') {
+                if (buffer.length >= 3) processBarcode(buffer);
+                setBuffer('');
+                return;
+            }
+            if (buffer.length > 25) setBuffer('');
+            if (e.key.length === 1) setBuffer(prev => prev + e.key);
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [buffer, processBarcode]);
+
+    const subTotal = items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+    const finalTotal = subTotal - (subTotal * (discount / 100));
+
+    const handleCheckout = async () => {
+        if (items.length === 0) return alert("Cart is empty!");
+
+        // This Payload matches your Spring Boot SalesDto
+        const orderPayload = {
+            adminId: 1, 
+            paymentMethod: paymentMethod,
+            discountPercentage: discount,
+            items: items.map(i => ({
+                barcodeId: i.barcodeId,
+                quantity: i.quantity,
+                unitPrice: i.unitPrice
+            }))
+        };
+
+        try {
+            // Hits @PostMapping("/place-order") in your SaleController
+            await salesApi.placeOrder(orderPayload);
+            alert("✅ Order Placed Successfully!");
+            setItems([]);
+            setDiscount(0);
+        } catch (error) {
+            alert("❌ Transaction Failed");
+        }
+    };
+
+    return (
+        <div className="sales-page-container">
+            <div className="sales-header">
+                <h1>POS Terminal</h1>
+                <div className="search-bar-container">
+                    <input 
+                        type="text" 
+                        className="manual-search-input"
+                        placeholder="Scan or type barcode..."
+                        value={manualSearch}
+                        onChange={(e) => setManualSearch(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') processBarcode(manualSearch); }}
+                    />
+                    <button className="search-btn" onClick={() => processBarcode(manualSearch)}>Add Item</button>
+                </div>
+                <div className="scan-status">{buffer.length > 0 ? `Scanning: ${buffer}` : "🟢 System Ready"}</div>
             </div>
-            <h3 className="stat-value">{stat.value}</h3>
-            <p className="stat-label">{stat.label}</p>
-          </div>
-        ))}
-      </div>
 
-      {/* Detailed Sales Table */}
-      <div className="recent-sales-section">
-        <div className="section-header">
-          <h3>Recent Transactions</h3>
-          <button className="export-btn" onClick={() => console.log('Exporting...')}>
-            Export CSV
-          </button>
+            <div className="pos-main-layout">
+                <div className="cart-container">
+                    <h3>Current Basket ({items.length} items)</h3>
+                    <table className="sales-table">
+                        <thead>
+                            <tr><th>BARCODE</th><th>PRODUCT</th><th>PRICE</th><th>QTY</th><th>TOTAL</th></tr>
+                        </thead>
+                        <tbody>
+                            {items.map((item, idx) => (
+                                <tr key={idx}>
+                                    <td>{item.barcodeId}</td>
+                                    <td>{item.productName}</td>
+                                    <td>LKR {item.unitPrice}</td>
+                                    <td>{item.quantity}</td>
+                                    <td>LKR {item.unitPrice * item.quantity}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div className="summary-card">
+                    <h3>Total Payable: LKR {finalTotal.toLocaleString()}</h3>
+                    <button className="checkout-btn" onClick={handleCheckout}>PROCESS PAYMENT</button>
+                </div>
+            </div>
         </div>
-        
-        {/* Responsive Table Wrapper */}
-        <div className="table-responsive">
-          <table className="sales-table">
-            <thead>
-              <tr>
-                <th>Order ID</th>
-                <th>Items</th>
-                <th>Payment</th>
-                <th>Total</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map((trx) => (
-                <tr key={trx.id}>
-                  <td>{trx.id}</td>
-                  <td>{trx.items}</td>
-                  <td>{trx.payment}</td>
-                  <td>{trx.total}</td>
-                  <td>
-                    <span className={`status-badge ${trx.status.toLowerCase()}`}>
-                      {trx.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default Sales;

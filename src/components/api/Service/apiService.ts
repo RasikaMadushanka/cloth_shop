@@ -25,14 +25,14 @@ export const stockApi = {
 
 // 3. SALES CONTROLLER (Matches SaleController.java)
 export const salesApi = {
-  placeOrder: (order: any) => api.post('/sales/place-order', order),
-  getSalesReport: (type: string, date: string) => api.get(`/sales/report/${type}/${date}`),
+  placeOrder: (order: any) => api.post('/api/sales/place-order', order),
+  getSalesReport: (type: string, date: string) => api.get(`/api/sales/report/${type}/${date}`),
 };
 
 // 4. ADMIN CONTROLLER (Matches Admin_Controller.java)
 export const adminApi = {
-  getAll: () => api.get('/admin/all'),
-  add: (data: any) => api.post('/admin/add', data),
-  update: (id: number, data: any) => api.put(`/admin/update/${id}`, data),
-  delete: (id: number) => api.delete(`/admin/delete/${id}`),
+  getAll: () => api.get('/api/admin/all'),
+  add: (data: any) => api.post('/api/admin/add', data),
+  update: (id: number, data: any) => api.put(`/api/admin/update/${id}`, data),
+  delete: (id: number) => api.delete(`/api/admin/delete/${id}`),
 };
