@@ -14,39 +14,21 @@ interface AdminDto {
 
 const AdminManagement: React.FC = () => {
   // --- MOCK STATIC DATA ---
-  const initialData: AdminDto[] = [
-    {
-      adminId: 1,
-      username: "rasika_dev",
-      role: "ROLE_ADMIN",
-      fullName: "Rasika Madushanka",
-      nic: "199512345678",
-      address: "Panadura, Sri Lanka",
-      isActive: true,
-    },
-    {
-      adminId: 2,
-      username: "amashi_ba",
-      role: "ROLE_MANAGER",
-      fullName: "Amashi Pathiraja",
-      nic: "199887654321",
-      address: "Dankotuwa, Sri Lanka",
-      isActive: true,
-    }
-  ];
-
-  const [admins, setAdmins] = useState<AdminDto[]>(initialData);
+  const [admins, setAdmins] = useState<AdminDto[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [formData, setFormData] = useState<AdminDto>({
     adminId: 0,
     username: '',
-    password: '',
+    password: '', // Be careful with passwords in updates
     role: 'ROLE_ADMIN',
     fullName: '',
     nic: '',
     address: '',
     isActive: true,
   });
+
+  
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
