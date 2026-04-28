@@ -10,6 +10,7 @@ interface Variant {
     size: string;
     sku: string;
     stockQuantity: number;
+    priceOverride?: number;
 }
 
 interface Product {
@@ -18,7 +19,6 @@ interface Product {
     category: string;
     basePrice: number;
     discountedPrice: number;
-    stockStatus: string;
     totalQuantity: number;
     availableColors: string[];
     availableSizes: string[];
@@ -33,6 +33,7 @@ interface FlatRow {
     color: string;
     size: string;
     stock: number;
+    price: number;
 }
 
 /* ================= COMPONENT ================= */
@@ -59,12 +60,18 @@ function AdminSelling() {
         load();
     }, []);
 
-    /* ================= FLATTEN VARIANTS ================= */
+    /* ================= FLATTEN + PRICE LOGIC ================= */
     const rows: FlatRow[] = useMemo(() => {
         const result: FlatRow[] = [];
 
         products.forEach((p) => {
             p.variants.forEach((v) => {
+
+                const price =
+                    v.priceOverride ??
+                    p.discountedPrice ??
+                    p.basePrice;
+
                 result.push({
                     productName: p.productName,
                     category: p.category,
@@ -72,7 +79,8 @@ function AdminSelling() {
                     barcodeId: v.barcodeId,
                     color: v.color,
                     size: v.size,
-                    stock: v.stockQuantity
+                    stock: v.stockQuantity,
+                    price
                 });
             });
         });
@@ -94,7 +102,7 @@ function AdminSelling() {
 
             {/* ================= HEADER ================= */}
             <div className="selling_top">
-                <h4>Product Overview</h4>
+                <h4>Product Selling Overview</h4>
                 <span className="top_options">⋯</span>
             </div>
 
@@ -122,6 +130,7 @@ function AdminSelling() {
                             <th>Barcode</th>
                             <th>Color</th>
                             <th>Size</th>
+                            <th>Price</th>
                             <th>Stock</th>
                         </tr>
                     </thead>
@@ -135,6 +144,13 @@ function AdminSelling() {
                                 <td className="mono">{item.barcodeId}</td>
                                 <td>{item.color}</td>
                                 <td>{item.size}</td>
+
+                                {/* ================= PRICE ================= */}
+                                <td className="price">
+                                    LKR {item.price.toFixed(2)}
+                                </td>
+
+                                {/* ================= STOCK ================= */}
                                 <td
                                     className={
                                         item.stock <= 5
@@ -152,7 +168,7 @@ function AdminSelling() {
                 </table>
             )}
 
-            {/* ================= FOOTER FILTER ================= */}
+            {/* ================= FOOTER ================= */}
             <div className="selling_footer">
                 <div className="filter_buttons">
                     <button className="active">All</button>

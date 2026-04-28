@@ -1,32 +1,224 @@
-/* ===== Layout Styling ===== */
+/* ================================
+   GLOBAL BACKGROUND
+================================ */
 .report-bg {
-  background-color: #f8fafc; /* Matches the image background */
+  background-color: #f8fafc;
+  min-height: 100vh;
+  padding: 1.5rem;
+  font-family: 'Inter', sans-serif;
 }
 
+
+/* ================================
+   CARD UI
+================================ */
 .card-ui {
   background-color: #ffffff;
   border-radius: 16px;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+  transition: all 0.25s ease;
 }
 
 .card-ui:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
 }
 
+
+/* ================================
+   BUTTONS
+================================ */
 .btn-primary {
   background-color: #2563eb;
-  box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.3);
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  border: none;
 }
 
+.btn-primary:hover {
+  background-color: #1d4ed8;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+}
+
+.btn-outline {
+  background: #ffffff;
+  border: 1px solid #cbd5f5;
+  color: #475569;
+  border-radius: 8px;
+  padding: 6px 14px;
+  transition: 0.2s ease;
+}
+
+.btn-outline:hover {
+  background-color: #f1f5f9;
+}
+
+
+/* ================================
+   TABLE STYLING
+================================ */
+/* ================================
+   TABLE WITH FULL GRID LINES
+================================ */
+.table-ui {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  border: 1px solid #e2e8f0;
+}
+
+.table-ui th,
+.table-ui td {
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0; /* ✅ vertical lines */
+}
+
+/* remove last column right border */
+.table-ui th:last-child,
+.table-ui td:last-child {
+  border-right: none;
+}
+
+/* header styling */
 .table-ui th {
   background-color: #f8fafc;
-  padding: 1rem;
-  border-bottom: 1px solid #e2e8f0;
+  color: #475569;
+  font-weight: 600;
+  text-align: left;
 }
 
-/* Fix for Recharts Responsive Container */
+/* hover effect */
+.table-ui tr:hover {
+  background-color: #f1f5f9;
+}
+
+
+/* ================================
+   SCROLL FIX
+================================ */
+.scroll-y {
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+
+/* ================================
+   BADGES
+================================ */
+.badge {
+  padding: 3px 8px;
+  font-size: 10px;
+  border-radius: 6px;
+  font-weight: 700;
+}
+
+.badge-indigo {
+  background-color: #eef2ff;
+  color: #4338ca;
+}
+
+/* ================================
+   TEXT UTILITIES
+================================ */
+.text-muted {
+  color: #94a3b8;
+}
+
+.text-success {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.text-danger {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.text-warning {
+  color: #f97316;
+  font-weight: 600;
+}
+
+.text-primary {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+
+/* ================================
+   SCROLL AREA
+================================ */
+.scroll-y {
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.scroll-y::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scroll-y::-webkit-scrollbar-thumb {
+  background: #cbd5f5;
+  border-radius: 10px;
+}
+
+.scroll-y::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+
+/* ================================
+   CHART FIX (IMPORTANT)
+================================ */
 .recharts-responsive-container {
-  min-height: 250px;
+  min-height: 300px;
+  width: 100% !important;
+}
+
+
+/* ================================
+   HEADER
+================================ */
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.report-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+
+/* ================================
+   BADGES
+================================ */
+.badge {
+  padding: 3px 8px;
+  font-size: 10px;
+  border-radius: 6px;
+  font-weight: 700;
+}
+
+.badge-indigo {
+  background-color: #eef2ff;
+  color: #4338ca;
+}
+
+.badge-green {
+  background-color: #ecfdf5;
+  color: #059669;
+}
+
+.badge-red {
+  background-color: #fef2f2;
+  color: #dc2626;
 }

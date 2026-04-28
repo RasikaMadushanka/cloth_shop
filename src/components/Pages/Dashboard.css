@@ -1,21 +1,25 @@
-/* General Layout Container */
+/* ================= GLOBAL LAYOUT ================= */
+
 .app-wrapper {
   display: flex;
   min-height: 100vh;
   background-color: #f8f9fa;
   font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
 }
 
-/* Main Content Area */
+/* ================= MAIN CONTENT ================= */
+
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  transition: margin-left 0.3s ease;
   width: 100%;
+  min-width: 0; /* IMPORTANT: prevents overflow in flex layouts */
 }
 
-/* Padding for the body content */
+/* ================= DASHBOARD BODY ================= */
+
 .dashboard-body {
   padding: 20px;
   max-width: 1400px;
@@ -24,47 +28,108 @@
   box-sizing: border-box;
 }
 
+/* ================= TOP HEADER ROW ================= */
+
+.dashboard-body > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ================= BUTTON ================= */
+
+.dashboard-body button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.dashboard-body button:hover {
+  background-color: #43a047;
+}
+
+/* ================= STATS ROW ================= */
+
 .dashboard-main-row {
   display: flex;
   gap: 20px;
-  flex-wrap: wrap; 
   margin-top: 20px;
+  align-items: stretch;
+  flex-wrap: wrap;
 }
 
+/* Each panel (Selling + Overview) */
 .dashboard-main-row > div {
   flex: 1;
-  min-width: 300px; 
+  min-width: 320px;
+  max-width: 100%;
 }
 
+/* ================= SCROLL SAFETY ================= */
 
+.dashboard-main-row {
+  overflow-x: auto;
+}
+
+/* ================= TABLET ================= */
 
 @media (max-width: 992px) {
   .app-wrapper {
-    flex-direction: column; /* Sidebar moves to top or becomes hidden */
+    flex-direction: column;
+  }
+
+  .dashboard-body {
+    padding: 15px;
   }
 
   .dashboard-main-row {
     flex-direction: column;
   }
-  
+
   .dashboard-main-row > div {
     width: 100%;
+    min-width: 100%;
   }
 }
 
-/* Small Mobile Devices */
+/* ================= MOBILE ================= */
+
 @media (max-width: 576px) {
+
   .dashboard-body {
     padding: 10px;
   }
-  
+
   .dashboard-body > div:first-child {
     flex-direction: column;
-    align-items: flex-start !important;
-    gap: 10px;
+    align-items: flex-start;
   }
-  
+
   .dashboard-body button {
     width: 100%;
+  }
+
+  .dashboard-main-row {
+    gap: 15px;
+  }
+}
+
+/* ================= ULTRA SMALL DEVICES ================= */
+
+@media (max-width: 400px) {
+  .dashboard-body {
+    padding: 8px;
+  }
+
+  h4 {
+    font-size: 14px;
   }
 }
