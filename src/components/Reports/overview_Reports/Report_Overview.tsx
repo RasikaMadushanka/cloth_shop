@@ -37,14 +37,13 @@ interface StockLog {
   };
 }
 
-// ✅ UPDATED INTERFACE WITH ALL ATTRIBUTES FROM YOUR JSON
 interface SavedStockReport {
   reportId: number;
   reportDate: string;
   generatedAt: string;
   reportType: string;
   stockValue: number;
-  soldItemsValue: number | null; // Added
+  soldItemsValue: number | null; 
   totalItemsIn: number;
   totalItemsOut: number;
   totalRevenue: number;
@@ -107,7 +106,7 @@ const Report_Overview: React.FC = () => {
     load();
   }, [type]);
 
-  // ✅ SORTED REPORTS (Latest First based on generatedAt)
+  //  SORTED REPORTS (Latest First based on generatedAt)
   const sortedReports = useMemo(() => {
     return [...savedReports].sort((a, b) => {
       const timeA = a.generatedAt ? new Date(a.generatedAt.replace(/-/g, "/")).getTime() : 0;
@@ -116,7 +115,7 @@ const Report_Overview: React.FC = () => {
     });
   }, [savedReports]);
 
-  // ✅ SORTED LOGS (Latest First)
+  //  SORTED LOGS (Latest First)
   const sortedLogs = useMemo(() => {
     return [...logs].sort((a, b) => {
       const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
@@ -158,7 +157,7 @@ const Report_Overview: React.FC = () => {
         <div className="bg-white p-5 rounded-lg shadow border-t-4 border-blue-600">
           <h2 className="font-bold text-blue-600 text-lg mb-2">📦 Stock Status</h2>
           <div className="grid grid-cols-3 gap-2 text-sm">
-            <div><p className="text-gray-400">Value</p><p className="font-bold">${stock.stockValue.toLocaleString()}</p></div>
+            <div><p className="text-gray-400">Value</p><p className="font-bold">Rs. {stock.stockValue.toLocaleString()}</p></div>
             <div><p className="text-gray-400">Items In</p><p className="font-bold text-green-600">{stock.totalItemsIn}</p></div>
             <div><p className="text-gray-400">Items Out</p><p className="font-bold text-red-600">{stock.totalItemsOut}</p></div>
           </div>
@@ -167,9 +166,9 @@ const Report_Overview: React.FC = () => {
         <div className="bg-white p-5 rounded-lg shadow border-t-4 border-green-600">
           <h2 className="font-bold text-green-600 text-lg mb-2">💰 Sales Summary</h2>
           <div className="grid grid-cols-3 gap-2 text-sm">
-            <div><p className="text-gray-400">Revenue</p><p className="font-bold">${sales.totalRevenue.toLocaleString()}</p></div>
+            <div><p className="text-gray-400">Revenue</p><p className="font-bold">Rs. {sales.totalRevenue.toLocaleString()}</p></div>
             <div><p className="text-gray-400">Sold Qty</p><p className="font-bold">{sales.totalItemsOut}</p></div>
-            <div><p className="text-gray-400">Discount</p><p className="font-bold text-orange-500">${sales.totalDiscountGiven.toLocaleString()}</p></div>
+            <div><p className="text-gray-400">Discount</p><p className="font-bold text-orange-500">Rs. {sales.totalDiscountGiven.toLocaleString()}</p></div>
           </div>
         </div>
       </div>
