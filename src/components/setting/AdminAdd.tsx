@@ -152,8 +152,8 @@ const AdminManagement: React.FC = () => {
             <div className="flex flex-col gap-2">
               <label className="text-blue-400 text-[10px] font-black uppercase tracking-widest">Role</label>
               <select name="role" value={formData.role} onChange={handleChange} className="form-input-style bg-slate-900 border-none outline-none text-white">
-                <option value="ROLE_ADMIN">System Admin</option>
-                <option value="ROLE_MANAGER">Project Manager</option>
+                <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+                <option value="ADMIN">ADMIN</option>
               </select>
             </div>
 

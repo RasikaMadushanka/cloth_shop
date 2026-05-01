@@ -45,4 +45,5 @@ export const adminApi = {
   add: (data: any) => api.post('/api/admin/add', data),
   update: (id: number, data: any) => api.put(`/api/admin/update/${id}`, data),
   delete: (id: number) => api.delete(`/api/admin/delete/${id}`),
+  login: (data: any) => api.post('/api/admin/login', data),
 };
