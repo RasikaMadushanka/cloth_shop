@@ -14,22 +14,8 @@ function Dashboard() {
                 <Topheader />
                 <div className="dashboard-body">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                        <h4 style={{ color: '#333', margin: 0 }}>Admin Dashboard</h4>
-                        <button style={{
-                            backgroundColor: '#4caf50',
-                            color: 'white',
-                            border: 'none',
-                            padding: '8px 15px',
-                            borderRadius: '8px',
-                            fontWeight: 'bold',
-                            cursor: 'pointer'
-                        }}>
-                            + Add New Product
-                        </button>
                     </div>
-
                     <AdminSlot />
-
                     <div className="dashboard-main-row">
                         <AdminSelling />
                         <AdminOverview />

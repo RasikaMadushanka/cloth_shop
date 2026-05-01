@@ -80,7 +80,7 @@ const AdminSlot: React.FC = () => {
 
     const status = [
         {
-            label: "Total Sales (Est.)",
+            label: "Total Product Value",
             value: loading ? "..." : `Rs. ${totalSalesEstimate.toFixed(2)}`,
             icon: <MdAttachMoney />,
             color: "#fdf2e9",

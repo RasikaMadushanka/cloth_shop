@@ -1,171 +1,120 @@
-.inventory_left {
-  background: white;
-  padding: 24px;
-  border-radius: 16px;
-  border: 1px solid #f0f2f5;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-  flex: 1;
+.inventory_table_container {
+  padding: 20px;
+  background: #f8fafc;
+  min-height: 100vh;
 }
 
+/* HEADER */
 .inventory_header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .inventory_header h2 {
-  font-size: 1.25rem;
-  color: #1a1c23;
-  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
 }
 
-.btn_add_new {
-  background: #4caf50;
-  color: white;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 8px;
+/* SEARCH */
+.search_box {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.inventory_controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  gap: 15px;
-}
-
-.filter_tabs {
-  display: flex;
-  gap: 8px;
-}
-
-.tab_btn {
-  padding: 8px 14px;
-  border: 1px solid #eee;
   background: white;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  color: #666;
-  cursor: pointer;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  width: 260px;
 }
 
-.tab_btn.active {
-  background: #3498db;
-  color: white;
-  border-color: #3498db;
-}
-
-.inventory_search {
-  position: relative;
-  flex: 1;
-  max-width: 300px;
-}
-
-.search_icon {
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #aaa;
-}
-
-.inventory_search input {
-  width: 100%;
-  padding: 10px 10px 10px 35px;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  background: #f9fbff;
+.search_box input {
+  border: none;
   outline: none;
+  width: 100%;
 }
 
-/* Table Styling */
-.inventory_table {
+/* TABLE WRAPPER */
+.table_wrapper {
+  background: white;
+  border-radius: 12px;
   overflow-x: auto;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
 
-.management_table {
+/* BIG TABLE */
+.inventory_big_table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 900px;
 }
 
-.management_table th {
+.inventory_big_table th {
   text-align: left;
-  padding: 12px;
-  font-size: 0.75rem;
+  padding: 14px;
+  font-size: 12px;
+  color: #6b7280;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
   text-transform: uppercase;
-  color: #aaa;
-  border-bottom: 1px solid #f0f0f0;
 }
 
-.management_table td {
-  padding: 16px 12px;
-  border-bottom: 1px solid #f9f9f9;
+.inventory_big_table td {
+  padding: 14px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-.item_cell {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.item_icon_bg {
-  width: 40px;
-  height: 40px;
-  background: #f4f7fa;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-}
-
-.item_details {
-  display: flex;
-  flex-direction: column;
-}
-
-.item_name {
+/* PRODUCT NAME */
+.product_name {
   font-weight: 600;
-  color: #333;
+  color: #111827;
 }
 
-.item_sku {
-  font-size: 0.75rem;
-  color: #aaa;
+/* MONO TEXT */
+.mono {
+  font-family: monospace;
+  font-size: 12px;
+  color: #2563eb;
 }
 
-.stock_low {
-  color: #e74c3c;
-  font-weight: 700;
-  background: #fff0f0;
+/* PRICE */
+.price {
+  font-weight: 600;
+  color: #111827;
+}
+
+/* TAGS */
+.tag {
+  font-size: 11px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  margin-right: 4px;
+}
+
+.tag.color {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.tag.size {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+
+/* STOCK */
+.low {
+  background: #fee2e2;
+  color: #dc2626;
   padding: 4px 8px;
   border-radius: 6px;
+  font-weight: 600;
 }
 
-.action_btns_group {
-  display: flex;
-  gap: 8px;
-}
-
-.action_btn {
-  width: 32px;
-  height: 32px;
+.ok {
+  background: #dcfce7;
+  color: #16a34a;
+  padding: 4px 8px;
   border-radius: 6px;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: white;
+  font-weight: 600;
 }
-
-.action_btn.edit { background: #27ae60; }
-.action_btn.delete { background: #e74c3c; }

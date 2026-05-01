@@ -1,64 +1,60 @@
-/* General Layout Container */
 .app-wrapper {
   display: flex;
   min-height: 100vh;
-  background-color: #f8f9fa;
+  background-color: #f8fafc;
   font-family: 'Inter', sans-serif;
 }
 
-/* Main Content Area */
+/* MAIN AREA */
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  transition: margin-left 0.3s ease;
   width: 100%;
 }
-/* Layout Container */
+
+/* PAGE WRAPPER */
 .inventory-body {
   padding: 20px;
   width: 100%;
   box-sizing: border-box;
 }
 
+/* GRID LAYOUT */
 .inventory-grid {
   display: grid;
-  /* 7 parts for the list, 3 parts for the billing sidebar */
-  grid-template-columns: 7fr 3fr; 
+  grid-template-columns: 1fr; /* single column (clean POS layout) */
   gap: 20px;
   align-items: start;
 }
 
-/* Section styling to ensure they don't overflow */
-.inventory-list-section, 
+/* SECTION */
+.inventory-list-section,
 .inventory-billing-section {
   width: 100%;
-  background: #fff;
-  border-radius: 12px;
+  background: #ffffff;
+  border-radius: 14px;
   overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.03);
 }
 
-/* RESPONSIVE BREAKPOINTS */
+/* OPTIONAL: give breathing space for ItemManagement */
+.inventory-list-section {
+  padding: 0;
+}
 
-/* Tablet View (Laptops/Tablets) */
+/* RESPONSIVE */
 @media (max-width: 1100px) {
   .inventory-grid {
-    grid-template-columns: 1fr; /* Stack vertically */
-  }
-
-  .inventory-billing-section {
-    position: relative;
-    top: 0;
+    grid-template-columns: 1fr;
   }
 }
 
-/* Mobile View */
 @media (max-width: 600px) {
   .inventory-body {
     padding: 10px;
   }
 
-  /* Make sure internal tables scroll horizontally if too wide */
   .inventory-list-section {
     overflow-x: auto;
   }

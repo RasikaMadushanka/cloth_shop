@@ -24,10 +24,12 @@ const Navbarasika: React.FC = () => {
     <div className='sidebar_container'>
       <div className='sidebar_title'>
         <MdCheckroom className='logo-icon' />
-        <div className='title_text'>
-          <h3>Clothing Shop</h3>
-          <span>Management System</span>
-        </div>
+      <div className="title_text">
+  <h1 className="text-2xl font-bold text-yellow-500">හෙළ සිත් රූ</h1>
+  <span className=" text-gray-200 font-medium tracking-wide text-2xl">
+    Inventory Management System
+  </span>
+</div>
       </div>
 
       <nav className='side_navbar'>

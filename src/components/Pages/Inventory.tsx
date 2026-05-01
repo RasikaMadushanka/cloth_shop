@@ -15,9 +15,6 @@ function Inventory() {
             <div className="inventory-list-section">
               <ItemManagement />
             </div>
-            <div className="inventory-billing-section">
-              <InventoryBilling />
-            </div>
           </div>
         </div>
       </div>

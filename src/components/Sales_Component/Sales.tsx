@@ -13,17 +13,20 @@ const Sales: React.FC = () => {
   const [items, setItems] = useState<SaleItem[]>([]);
   const [discount, setDiscount] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<string>('CASH');
-  const [adminId, setAdminId] = useState<number>(1); // ✅ NEW
+  const [adminId, setAdminId] = useState<number>(1);
   const [buffer, setBuffer] = useState<string>('');
   const [manualSearch, setManualSearch] = useState<string>('');
+
+  // ✅ NEW: edit mode
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   // 🔊 Beep sound
   const playSuccessBeep = useCallback(() => {
     const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/700/700-preview.mp3');
-    audio.play().catch(() => { });
+    audio.play().catch(() => {});
   }, []);
 
-  // ✅ Barcode processing (variant-based)
+  // ✅ Barcode processing
   const processBarcode = useCallback(async (barcode: string) => {
     const cleanInput = String(barcode).trim();
     if (!cleanInput) return;
@@ -117,13 +120,33 @@ const Sales: React.FC = () => {
   const discountAmount = subTotal * (discount / 100);
   const finalTotal = subTotal - discountAmount;
 
+  // ✅ CLEAN METHODS
+  const removeItem = (barcodeId: string) => {
+    setItems(prev => prev.filter(i => i.barcodeId !== barcodeId));
+  };
+
+  const updateQuantity = (barcodeId: string, qty: number) => {
+    setItems(prev =>
+      prev.map(i =>
+        i.barcodeId === barcodeId
+          ? { ...i, quantity: qty }
+          : i
+      )
+    );
+  };
+
+  const clearCart = () => {
+    setItems([]);
+    setDiscount(0);
+  };
+
   // 🧾 Checkout
   const handleCheckout = async () => {
     if (items.length === 0) return alert("Cart is empty!");
     if (!adminId) return alert("Enter Admin ID");
 
     const orderPayload = {
-      adminId: adminId, // ✅ uses input
+      adminId: adminId,
       paymentMethod,
       discountPercentage: discount,
       items: items.map(i => ({
@@ -136,15 +159,15 @@ const Sales: React.FC = () => {
     try {
       await salesApi.placeOrder(orderPayload);
       alert("✅ Order Placed Successfully!");
-      setItems([]);
-      setDiscount(0);
+      clearCart();
     } catch {
       alert("❌ Transaction Failed");
     }
   };
+
   const printFinalBill = () => {
     const shopName = "ASIKA FASHION STORE";
-    const contactNumber = "+94 77 123 4567"; // change your shop number
+    const contactNumber = "+94 77 123 4567";
     const dateTime = new Date().toLocaleString();
 
     if (items.length === 0) {
@@ -158,14 +181,14 @@ const Sales: React.FC = () => {
       itemList += `
 ${item.productName}
 Barcode: ${item.barcodeId}
-Qty: ${item.quantity} x LKR ${item.unitPrice} = LKR ${item.quantity * item.unitPrice}
------------------------------
-`;
+Qty: ${item.quantity} x LKR ${item.unitPrice}
+= LKR ${item.quantity * item.unitPrice}
+-----------------------------`;
     });
 
     const bill = `
 =============================
-      ${shopName}
+${shopName}
 =============================
 Contact: ${contactNumber}
 Date/Time: ${dateTime}
@@ -180,7 +203,7 @@ DISCOUNT  : LKR ${discountAmount.toFixed(2)}
 TOTAL PAY : LKR ${finalTotal.toFixed(2)}
 
 =============================
-   THANK YOU COME AGAIN!
+THANK YOU COME AGAIN!
 =============================
 `;
 
@@ -188,22 +211,22 @@ TOTAL PAY : LKR ${finalTotal.toFixed(2)}
 
     if (win) {
       win.document.write(`
-            <html>
-            <head>
-                <title>Bill</title>
-                <style>
-                    body {
-                        font-family: monospace;
-                        padding: 20px;
-                        white-space: pre;
-                    }
-                </style>
-            </head>
-            <body onload="window.print(); window.close();">
-                <pre>${bill}</pre>
-            </body>
-            </html>
-        `);
+        <html>
+        <head>
+          <title>Bill</title>
+          <style>
+            body {
+              font-family: monospace;
+              padding: 20px;
+              white-space: pre;
+            }
+          </style>
+        </head>
+        <body onload="window.print(); window.close();">
+          <pre>${bill}</pre>
+        </body>
+        </html>
+      `);
 
       win.document.close();
     }
@@ -214,7 +237,6 @@ TOTAL PAY : LKR ${finalTotal.toFixed(2)}
       <div className="sales-header">
         <h1>POS Terminal</h1>
 
-        {/* ✅ ADMIN ID INPUT */}
         <div style={{ marginBottom: "10px" }}>
           <label>Admin ID</label>
           <input
@@ -246,7 +268,6 @@ TOTAL PAY : LKR ${finalTotal.toFixed(2)}
       </div>
 
       <div className="pos-main-layout">
-        {/* 🛒 CART */}
         <div className="cart-container">
           <h3>Current Basket ({items.length} items)</h3>
 
@@ -258,6 +279,7 @@ TOTAL PAY : LKR ${finalTotal.toFixed(2)}
                 <th>PRICE</th>
                 <th>QTY</th>
                 <th>TOTAL</th>
+                <th>ACTION</th>
               </tr>
             </thead>
 
@@ -268,34 +290,48 @@ TOTAL PAY : LKR ${finalTotal.toFixed(2)}
                   <td>{item.productName}</td>
                   <td>LKR {item.unitPrice}</td>
 
-                  {/* ✅ QTY INPUT */}
                   <td>
-                    <input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) => {
-                        const qty = Math.max(1, Number(e.target.value));
-                        setItems(prev =>
-                          prev.map(i =>
-                            i.barcodeId === item.barcodeId
-                              ? { ...i, quantity: qty }
-                              : i
-                          )
-                        );
-                      }}
-                      style={{ width: "60px" }}
-                    />
+                    {editingId === item.barcodeId ? (
+                      <input
+                        type="number"
+                        min="1"
+                        value={item.quantity}
+                        onChange={(e) =>
+                          updateQuantity(item.barcodeId, Math.max(1, Number(e.target.value)))
+                        }
+                        onBlur={() => setEditingId(null)}
+                        autoFocus
+                        style={{ width: "60px" }}
+                      />
+                    ) : (
+                      <span onClick={() => setEditingId(item.barcodeId)}>
+                        {item.quantity}
+                      </span>
+                    )}
                   </td>
 
                   <td>LKR {item.unitPrice * item.quantity}</td>
+
+                  <td>
+                    <button
+                      onClick={() => removeItem(item.barcodeId)}
+                      style={{
+                        background: "red",
+                        color: "white",
+                        border: "none",
+                        padding: "5px 10px",
+                        cursor: "pointer"
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* 💳 SUMMARY */}
         <div className="summary-card">
           <div style={{ marginBottom: "10px" }}>
             <label>Discount (%)</label>
@@ -314,6 +350,22 @@ TOTAL PAY : LKR ${finalTotal.toFixed(2)}
           <button className="checkout-btn" onClick={handleCheckout}>
             PROCESS PAYMENT
           </button>
+
+          <button
+            onClick={clearCart}
+            style={{
+              width: "100%",
+              marginTop: "10px",
+              background: "#ef4444",
+              color: "white",
+              padding: "10px",
+              border: "none",
+              borderRadius: "8px"
+            }}
+          >
+            CLEAR CART
+          </button>
+
           <button
             onClick={printFinalBill}
             style={{
@@ -324,8 +376,7 @@ TOTAL PAY : LKR ${finalTotal.toFixed(2)}
               padding: "14px",
               border: "none",
               borderRadius: "10px",
-              fontWeight: "700",
-              cursor: "pointer"
+              fontWeight: "700"
             }}
           >
             PRINT FINAL BILL

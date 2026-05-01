@@ -171,8 +171,6 @@ const Report_Overview: React.FC = () => {
         </div>
       </div>
 
-      {/* HISTORICAL TABLE - SORTED BY ID */}
-     // ONLY showing modified parts (tables). Your logic is untouched.
 
       {/* HISTORICAL TABLE */}
       <div className="bg-white p-4 rounded shadow-sm mb-6 overflow-x-auto">
@@ -191,6 +189,7 @@ const Report_Overview: React.FC = () => {
               <th className="text-right">Sold Items Value</th>
               <th className="text-right text-green-700">Net Revenue</th>
               <th className="text-right text-orange-600">Discount</th>
+              
               <th className="text-center text-green-600">In</th>
               <th className="text-center text-red-500">Out</th>
             </tr>
@@ -234,7 +233,7 @@ const Report_Overview: React.FC = () => {
       </div>
 
 
-      {/* STOCK LOG TABLE */}
+      {/* STOCK LOG TABLE
       <div className="bg-white p-4 rounded shadow-sm border">
         <h2 className="font-bold text-purple-600 mb-3 text-lg">
           📋 Stock Logs
@@ -271,7 +270,7 @@ const Report_Overview: React.FC = () => {
             </tbody>
           </table>
         </div>
-      </div>
+      </div> */}
 
       {/* LOGS & CHART */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

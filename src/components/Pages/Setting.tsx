@@ -11,9 +11,7 @@ function Setting() {
       <div className="main-content">
         <Topheader />
         <div className="content-body"> 
-          <header className="page-header">
-            <h2 className="text-white text-2xl font-bold p-4">Settings</h2>
-          </header>
+         
           
           {/* This is where your Admin Add Form will appear */}
           <div className="settings-container">

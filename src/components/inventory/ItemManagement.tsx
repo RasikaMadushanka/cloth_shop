@@ -1,80 +1,137 @@
-import { MdEdit, MdDelete, MdSearch, MdAdd } from "react-icons/md";
-import './ItemManagement.css'
-interface ProductItem {
-    id: number;
-    name: string;
-    price: number;
-    stock: number;
-    category: string;
-    image: string; // Emoji or URL
-    sku: string;
+import React, { useEffect, useState } from "react";
+import { MdSearch } from "react-icons/md";
+import "./ItemManagement.css";
+import { productApi } from "../api/Service/apiService";
+
+interface Variant {
+  barcodeId: string;
+  color: string;
+  size: string;
+  sku: string;
+  stockQuantity: number;
+  priceOverride: number;
+}
+
+interface Product {
+  productId: number;
+  productName: string;
+  category: string;
+  basePrice: number;
+  totalQuantity: number;
+  availableColors: string[];
+  availableSizes: string[];
+  variants: Variant[];
 }
 
 function ItemManagement() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [search, setSearch] = useState("");
 
-    const products: ProductItem[] = [
-        { id: 1, name: "Black T-Shirt", price: 20.00, stock: 50, category: "T-Shirts", image: "👕", sku: "TS-001" },
-        { id: 2, name: "Blue Jeans", price: 40.00, stock: 35, category: "Jeans", image: "👖", sku: "JN-002" },
-        { id: 3, name: "Red Dress", price: 60.00, stock: 3, category: "Dresses", image: "👗", sku: "DR-003" },
-        { id: 4, name: "Grey Hoodie", price: 35.00, stock: 28, category: "Jackets", image: "🧥", sku: "HD-004" },
-    ];
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const res = await productApi.getAll();
+        setProducts(res.data || []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    loadProducts();
+  }, []);
 
-    return (
-        <div className="inventory_left">
-            <div className="inventory_header">
-                <h3>Inventory Management</h3><button className="btn_add_new"><MdAdd />Add New Product</button>
-            </div>
-            <div className="inventory_controls">
-                <div className="filter_tabs">
-                    <button className="tab_btn active">All</button>
-                    <button className="tab_btn">T-Shirts</button>
-                    <button className="tab_btn">Jeans</button>
-                    <button className="tab_btn">Dresses</button>
-                    <button className="tab_btn">Jackets</button>
-                </div>
-                <div className="inventory_search">
-                    <MdSearch className="search_icon" /><input type="text" placeholder="Search" />
-                </div>
-            </div>
-            <div className="inventory_table">
-                <table className="management_table">
-                    <thead>
-                        <tr>
-                            <th>Product Name</th>
-                            <th>Price</th>
-                            <th>Stock</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {products.map((item) => (
-                            <tr key={item.id}>
-                                <td className="item_cell">
-                                    <div className="item_icon">{item.image}</div>
-                                    <div className="item_details_text">
-                                        <span className="item_name">{item.name}</span>
-                                        <span className="item_sku">{item.sku}</span>
-                                    </div>
-                                </td>
-                                <td className="item_price">${item.price.toFixed(2)}</td>
-                                <td className="item_stock">
-                                    <span className={item.stock < 10 ? "stock_low" : "stock_normal"}>
-                                        {item.stock}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div className="action_btns_group">
-                                        <button className="action_btn edit"><MdEdit /></button>
-                                        <button className="action_btn delete"><MdDelete /></button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+  const filteredProducts = products.filter(p =>
+    p.productName.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="inventory_table_container">
+
+      {/* HEADER */}
+      <div className="inventory_header">
+        
+
+        <div className="search_box">
+          <MdSearch />
+          <input
+            type="text"
+            placeholder="Search product..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
-    );
-};
+      </div>
 
-export default ItemManagement
+      {/* BIG TABLE */}
+      <div className="table_wrapper">
+        <table className="inventory_big_table">
+
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Category</th>
+              <th>Colors</th>
+              <th>Sizes</th>
+              <th>Barcode</th>
+              <th>SKU</th>
+              <th>Price</th>
+              <th>Stock</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {filteredProducts.map(product =>
+              product.variants.map((v) => (
+                <tr key={v.barcodeId}>
+
+                  {/* PRODUCT */}
+                  <td className="product_name">
+                    {product.productName}
+                  </td>
+
+                  {/* CATEGORY */}
+                  <td>{product.category}</td>
+
+                  {/* COLORS */}
+                  <td>
+                    {product.availableColors.map((c, i) => (
+                      <span key={i} className="tag color">{c}</span>
+                    ))}
+                  </td>
+
+                  {/* SIZES */}
+                  <td>
+                    {product.availableSizes.map((s, i) => (
+                      <span key={i} className="tag size">{s}</span>
+                    ))}
+                  </td>
+
+                  {/* BARCODE */}
+                  <td className="mono">{v.barcodeId}</td>
+
+                  {/* SKU */}
+                  <td>{v.sku}</td>
+
+                  {/* PRICE */}
+                  <td className="price">
+                    LKR {(v.priceOverride ?? product.basePrice).toLocaleString()}
+                  </td>
+
+                  {/* STOCK */}
+                  <td>
+                    <span className={v.stockQuantity < 10 ? "low" : "ok"}>
+                      {v.stockQuantity}
+                    </span>
+                  </td>
+
+                </tr>
+              ))
+            )}
+          </tbody>
+
+        </table>
+      </div>
+    </div>
+  );
+}
+
+export default ItemManagement;
