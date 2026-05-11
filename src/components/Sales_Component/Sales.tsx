@@ -16,17 +16,17 @@ const Sales: React.FC = () => {
   const [adminId, setAdminId] = useState<number>(1);
   const [buffer, setBuffer] = useState<string>('');
   const [manualSearch, setManualSearch] = useState<string>('');
+  const [cashReceived, setCashReceived] = useState<number>(0);
 
-  // ✅ NEW: edit mode
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  // 🔊 Beep sound
   const playSuccessBeep = useCallback(() => {
-    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/700/700-preview.mp3');
-    audio.play().catch(() => {});
+    const audio = new Audio(
+      'https://assets.mixkit.co/active_storage/sfx/270/270-preview.mp3'
+    );
+    audio.play().catch(() => { });
   }, []);
 
-  // ✅ Barcode processing
   const processBarcode = useCallback(async (barcode: string) => {
     const cleanInput = String(barcode).trim();
     if (!cleanInput) return;
@@ -53,7 +53,7 @@ const Sales: React.FC = () => {
       }
 
       if (!foundVariant) {
-        alert(`❌ Product with barcode [${cleanInput}] not found`);
+        alert(` Product with barcode [${cleanInput}] not found`);
         return;
       }
 
@@ -88,11 +88,10 @@ const Sales: React.FC = () => {
       setManualSearch('');
     } catch (err) {
       console.error(err);
-      alert("❌ Database error");
+      alert(" Database error");
     }
   }, [playSuccessBeep]);
 
-  // ⌨️ Scanner listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
@@ -111,7 +110,6 @@ const Sales: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [buffer, processBarcode]);
 
-  // 💰 Calculations
   const subTotal = items.reduce(
     (sum, item) => sum + item.unitPrice * item.quantity,
     0
@@ -120,7 +118,9 @@ const Sales: React.FC = () => {
   const discountAmount = subTotal * (discount / 100);
   const finalTotal = subTotal - discountAmount;
 
-  // ✅ CLEAN METHODS
+  // ✅ NEW (balance calculation)
+  const balance = cashReceived - finalTotal;
+
   const removeItem = (barcodeId: string) => {
     setItems(prev => prev.filter(i => i.barcodeId !== barcodeId));
   };
@@ -140,7 +140,6 @@ const Sales: React.FC = () => {
     setDiscount(0);
   };
 
-  // 🧾 Checkout
   const handleCheckout = async () => {
     if (items.length === 0) return alert("Cart is empty!");
     if (!adminId) return alert("Enter Admin ID");
@@ -156,12 +155,17 @@ const Sales: React.FC = () => {
       }))
     };
 
+    if (cashReceived < finalTotal) {
+      alert("Insufficient cash!");
+      return;
+    }
+
     try {
       await salesApi.placeOrder(orderPayload);
-      alert("✅ Order Placed Successfully!");
+      alert(" Order Placed Successfully!");
       clearCart();
     } catch {
-      alert("❌ Transaction Failed");
+      alert(" Transaction Failed");
     }
   };
 
@@ -186,25 +190,31 @@ Qty: ${item.quantity} x LKR ${item.unitPrice}
 -----------------------------`;
     });
 
-    const bill = `
-=============================
-${shopName}
-=============================
-Contact: ${contactNumber}
-Date/Time: ${dateTime}
-=============================
+ const width = 29;
+
+const line = (text = "") => text.padEnd(width, " ");
+
+const bill = `
+${"=".repeat(width)}
+| ${shopName.padEnd(width - 2)}|
+${"=".repeat(width)}
+| Contact: ${contactNumber.padEnd(width - 11)}|
+| Date/Time: ${dateTime.padEnd(width - 13)}|
+${"=".repeat(width)}
 
 ${itemList}
 
------------------------------
-SUB TOTAL : LKR ${subTotal.toFixed(2)}
-DISCOUNT  : LKR ${discountAmount.toFixed(2)}
------------------------------
-TOTAL PAY : LKR ${finalTotal.toFixed(2)}
+${"-".repeat(width)}
+ SUB TOTAL : LKR ${subTotal.toFixed(2)}
+ DISCOUNT   : LKR ${discountAmount.toFixed(2)}
+ CASH       : LKR ${cashReceived.toFixed(2)}
+ BALANCE    : LKR ${balance.toFixed(2)}
+${"-".repeat(width)}
+ TOTAL PAY  : LKR ${finalTotal.toFixed(2)}
 
-=============================
-THANK YOU COME AGAIN!
-=============================
+${"=".repeat(width)}
+       THANK YOU COME AGAIN!
+${"=".repeat(width)}
 `;
 
     const win = window.open('', '', 'width=400,height=600');
@@ -343,8 +353,21 @@ THANK YOU COME AGAIN!
             />
           </div>
 
+          {/*  NEW CASH INPUT */}
+          <div style={{ marginBottom: "10px" }}>
+            <label>Cash Received</label>
+            <input
+              type="number"
+              value={cashReceived}
+              onChange={(e) => setCashReceived(Number(e.target.value))}
+              style={{ width: "100%", padding: "5px" }}
+            />
+          </div>
+
           <h3>Subtotal: LKR {subTotal.toLocaleString()}</h3>
           <h4>Discount: - LKR {discountAmount.toLocaleString()}</h4>
+          <h4>Balance: LKR {balance.toLocaleString()}</h4>
+
           <h2>Total Payable: LKR {finalTotal.toLocaleString()}</h2>
 
           <button className="checkout-btn" onClick={handleCheckout}>

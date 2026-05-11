@@ -17,7 +17,6 @@ export const productApi = {
 
 // 2. STOCK CONTROLLER (Matches Stock_Controller.java)
 export const stockApi = {
-  // Update stock (Restock)
   update: (data: any) => api.post('/api/stock/update', data),
   
   // Real-time Report Generation
