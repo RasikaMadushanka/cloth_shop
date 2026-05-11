@@ -6,10 +6,14 @@ interface SaleItem {
   barcodeId: string;
   productName: string;
   quantity: number;
-  unitPrice: number;
+  unitPrice: number; 
+  retailPrice: number; 
+  wholesalePrice: number; 
+  priceType: 'RETAIL' | 'WHOLESALE';
 }
 
 const Sales: React.FC = () => {
+  const [saleType, setSaleType] = useState<'RETAIL' | 'WHOLESALE'>('RETAIL');
   const [items, setItems] = useState<SaleItem[]>([]);
   const [discount, setDiscount] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<string>('CASH');
@@ -39,56 +43,50 @@ const Sales: React.FC = () => {
       let foundVariant: any = null;
 
       for (const product of products) {
-        if (product.variants && Array.isArray(product.variants)) {
-          const variant = product.variants.find((v: any) =>
-            String(v.barcodeId).trim() === cleanInput
-          );
-
-          if (variant) {
-            foundProduct = product;
-            foundVariant = variant;
-            break;
-          }
+        const variant = product.variants?.find((v: any) => String(v.barcodeId).trim() === cleanInput);
+        if (variant) {
+          foundProduct = product;
+          foundVariant = variant;
+          break;
         }
       }
 
       if (!foundVariant) {
-        alert(` Product with barcode [${cleanInput}] not found`);
+        alert(`Product not found`);
         return;
       }
 
       playSuccessBeep();
 
-      const finalBarcode = foundVariant.barcodeId;
-      const finalPrice =
-        foundVariant.priceOverride ?? foundProduct.basePrice ?? 0;
-
       setItems(prev => {
-        const exists = prev.find(i => i.barcodeId === finalBarcode);
+        const existingItem = prev.find(i => i.barcodeId === foundVariant.barcodeId);
+        const newQty = existingItem ? existingItem.quantity + 1 : 1;
 
-        if (exists) {
+        // AUTO-SWITCH LOGIC: 6 or more = Wholesale
+        const isWholesale = newQty >= 6;
+        const priceToUse = isWholesale
+          ? (foundProduct.wholesalePrice || 0)
+          : (foundProduct.retailPrice || 0);
+
+        if (existingItem) {
           return prev.map(i =>
-            i.barcodeId === finalBarcode
-              ? { ...i, quantity: i.quantity + 1 }
+            i.barcodeId === foundVariant.barcodeId
+              ? { ...i, quantity: newQty, unitPrice: priceToUse, priceType: isWholesale ? 'WHOLESALE' : 'RETAIL' }
               : i
           );
         }
 
-        return [
-          ...prev,
-          {
-            barcodeId: finalBarcode,
-            productName: foundProduct.productName || "Product",
-            quantity: 1,
-            unitPrice: finalPrice
-          }
-        ];
+        return [...prev, {
+          barcodeId: foundVariant.barcodeId,
+          productName: foundProduct.productName,
+          quantity: 1,
+          unitPrice: priceToUse,
+          priceType: isWholesale ? 'WHOLESALE' : 'RETAIL'
+        }];
       });
-
       setManualSearch('');
     } catch (err) {
       console.error(err);
-      alert(" Database error");
     }
   }, [playSuccessBeep]);
 
@@ -127,11 +125,16 @@ const Sales: React.FC = () => {
 
   const updateQuantity = (barcodeId: string, qty: number) => {
     setItems(prev =>
-      prev.map(i =>
-        i.barcodeId === barcodeId
-          ? { ...i, quantity: qty }
-          : i
-      )
+      prev.map(item => {
+        if (item.barcodeId === barcodeId) {
+          // Here we assume you've added wholesale/retail prices to the item object
+          // If not, you'll need to fetch product data here.
+          const isWholesale = qty >= 6;
+          // This is a placeholder logic—ensure you have access to the actual rates
+          return { ...item, quantity: qty, priceType: isWholesale ? 'WHOLESALE' : 'RETAIL' };
+        }
+        return item;
+      })
     );
   };
 
@@ -182,38 +185,41 @@ const Sales: React.FC = () => {
     let itemList = "";
 
     items.forEach((item) => {
+      // AUTO-DETECT TYPE: If qty >= 6, it's Wholesale
+      const typeLabel = item.quantity >= 6 ? "[WHOLESALE]" : "[RETAIL]";
+
       itemList += `
-${item.productName}
+${item.productName} ${typeLabel}
 Barcode: ${item.barcodeId}
-Qty: ${item.quantity} x LKR ${item.unitPrice}
-= LKR ${item.quantity * item.unitPrice}
+Qty: ${item.quantity} x LKR ${item.unitPrice.toFixed(2)}
+Total: LKR ${(item.quantity * item.unitPrice).toFixed(2)}
 -----------------------------`;
     });
 
- const width = 29;
+    const width = 29;
 
-const line = (text = "") => text.padEnd(width, " ");
-
-const bill = `
+    const bill = `
 ${"=".repeat(width)}
-| ${shopName.padEnd(width - 2)}|
+| ${shopName.padEnd(width - 4)} |
 ${"=".repeat(width)}
-| Contact: ${contactNumber.padEnd(width - 11)}|
-| Date/Time: ${dateTime.padEnd(width - 13)}|
+Contact: ${contactNumber}
+Date: ${dateTime}
 ${"=".repeat(width)}
 
 ${itemList}
 
 ${"-".repeat(width)}
- SUB TOTAL : LKR ${subTotal.toFixed(2)}
- DISCOUNT   : LKR ${discountAmount.toFixed(2)}
- CASH       : LKR ${cashReceived.toFixed(2)}
- BALANCE    : LKR ${balance.toFixed(2)}
+SUB TOTAL : LKR ${subTotal.toFixed(2)}
+DISCOUNT  : LKR ${discountAmount.toFixed(2)}
+NET TOTAL : LKR ${finalTotal.toFixed(2)}
 ${"-".repeat(width)}
- TOTAL PAY  : LKR ${finalTotal.toFixed(2)}
+PAYMENT   : ${paymentMethod}
+CASH      : LKR ${cashReceived.toFixed(2)}
+BALANCE   : LKR ${balance.toFixed(2)}
+${"-".repeat(width)}
 
 ${"=".repeat(width)}
-       THANK YOU COME AGAIN!
+    THANK YOU COME AGAIN!
 ${"=".repeat(width)}
 `;
 
@@ -223,12 +229,17 @@ ${"=".repeat(width)}
       win.document.write(`
         <html>
         <head>
-          <title>Bill</title>
+          <title>Bill - ${shopName}</title>
           <style>
             body {
-              font-family: monospace;
-              padding: 20px;
+              font-family: 'Courier New', Courier, monospace;
+              padding: 10px;
               white-space: pre;
+              font-size: 12px;
+              color: #000;
+            }
+            pre {
+                margin: 0;
             }
           </style>
         </head>
@@ -237,7 +248,6 @@ ${"=".repeat(width)}
         </body>
         </html>
       `);
-
       win.document.close();
     }
   };
@@ -298,7 +308,17 @@ ${"=".repeat(width)}
                 <tr key={idx}>
                   <td>{item.barcodeId}</td>
                   <td>{item.productName}</td>
-                  <td>LKR {item.unitPrice}</td>
+                  {/* Inside the items.map in the table */}
+                  <td>
+                    LKR {item.unitPrice}
+                    <small style={{
+                      color: item.quantity >= 6 ? '#f59e0b' : '#94a3b8',
+                      display: 'block',
+                      fontSize: '10px'
+                    }}>
+                      {item.quantity >= 6 ? 'WHOLESALE' : 'RETAIL'}
+                    </small>
+                  </td>
 
                   <td>
                     {editingId === item.barcodeId ? (
