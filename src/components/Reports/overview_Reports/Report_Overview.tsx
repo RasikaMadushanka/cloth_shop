@@ -30,8 +30,8 @@ interface StockLog {
   quantityChange: number;
   timestamp: string;
   updateReason: string;
-  currentStock: number; // The stock recorded after change
-  oldStock: number;     // Calculated: Now Stock - Change
+  currentStock: number;
+  saleType?: 'RETAIL' | 'WHOLESALE' | null; // Added this line
   variant?: {
     stockQuantity?: number;
   };
@@ -90,14 +90,17 @@ const Report_Overview: React.FC = () => {
         const logRes = await stockApi.getAllLogs();
         const savedRes = await stockApi.getAllSavedReports();
 
+        // Inside your useEffect -> load function:
         const mappedLogs: StockLog[] = (logRes.data || []).map((log: any) => ({
           logId: log.LOG_ID || log.logId,
           barcodeId: log.BARCODE_ID || log.barcodeId,
           quantityChange: log.QUANTITY_CHANGE || log.quantityChange,
           timestamp: log.TIMESTAMP || log.timestamp,
           updateReason: log.UPDATE_REASON || log.updateReason,
+          saleType: log.SALE_TYPE || log.saleType, // Map the sale type from backend
           variant: log.VARIANT_ID || log.variant,
-          currentStock: (log.VARIANT_ID || log.variant)?.stockQuantity ?? 0
+          // Use a fallback to ensure currentStock is always a number
+          currentStock: log.CURRENT_STOCK ?? log.currentStock ?? (log.VARIANT_ID || log.variant)?.stockQuantity ?? 0
         }));
 
         if (stockRes.data) setStock(stockRes.data);
@@ -189,7 +192,7 @@ const Report_Overview: React.FC = () => {
               <th className="text-right">Sold Items Value</th>
               <th className="text-right text-green-700">Net Revenue</th>
               <th className="text-right text-orange-600">Discount</th>
-              
+
               <th className="text-center text-green-600">In</th>
               <th className="text-center text-red-500">Out</th>
             </tr>
@@ -283,6 +286,8 @@ const Report_Overview: React.FC = () => {
                   <th className="p-2 border-b">Barcode</th>
                   <th className="p-2 border-b text-center">Change</th>
                   <th className="p-2 border-b text-center bg-blue-50">Now Stock</th>
+                  {/* --- New Column Header --- */}
+                  <th className="p-2 border-b">Type</th>
                   <th className="p-2 border-b">Reason</th>
                   <th className="p-2 border-b">Time</th>
                 </tr>
@@ -297,6 +302,19 @@ const Report_Overview: React.FC = () => {
                     <td className="p-2 text-center font-bold bg-blue-50/30">
                       {l.currentStock}
                     </td>
+
+                    {/* --- New Column Data --- */}
+                    <td className="p-2">
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${l.saleType === 'WHOLESALE'
+                          ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                          : l.saleType === 'RETAIL'
+                            ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                            : 'text-gray-400' // For non-sale updates like manual stock-in
+                        }`}>
+                        {l.saleType || 'N/A'}
+                      </span>
+                    </td>
+
                     <td className="p-2 text-gray-500 text-[10px] uppercase font-bold">{l.updateReason}</td>
                     <td className="p-2 text-gray-400 whitespace-nowrap">
                       {l.timestamp ? new Date(l.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
