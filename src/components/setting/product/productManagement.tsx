@@ -9,6 +9,7 @@ interface Variant {
   sku?: string;
   size: string;
   color: string;
+  colorCode?: string; // <-- ADD THIS LINE
   stockQuantity: number;
   priceOverride: number;
   finalPrice?: number | null;
@@ -45,11 +46,17 @@ const ProductManagement: React.FC = () => {
     discountPercentage: 0
   });
   // 1. Change state to an array
-const [variantForm, setVariantForm] = useState<Variant[]>([{ size: '', color: '', stockQuantity: 0, priceOverride: 0 }]);
+// Update the initial state
+const [variantForm, setVariantForm] = useState<Variant[]>([
+  { size: '', color: '', colorCode: '#000000', stockQuantity: 0, priceOverride: 0 }
+]);
 
-// 2. Add helper to add a new empty row
+// Update the helper to include colorCode in new rows
 const addVariantRow = () => {
-  setVariantForm([...variantForm, { size: '', color: '', stockQuantity: 0, priceOverride: 0 }]);
+  setVariantForm([
+    ...variantForm, 
+    { size: '', color: '', colorCode: '#000000', stockQuantity: 0, priceOverride: 0 }
+  ]);
 };
 
 // 3. Add helper to remove a specific row
@@ -325,37 +332,54 @@ const handleVariantInputChange = (index: number, field: keyof Variant, value: an
         <option value="">Choose Master Product...</option>
         {products.map(p => <option key={p.productId} value={p.productId}>{p.productName} (ID: {p.productId})</option>)}
       </select>
+{variantForm.map((v, index) => (
+  <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center p-4 bg-white/[0.02] rounded-2xl border border-white/5">
+    
+    {/* Size Input */}
+    <input 
+      placeholder="Size" 
+      className="md:col-span-3 bg-white/5 border border-white/10 p-3 rounded-xl outline-none text-sm text-white focus:border-blue-500/50" 
+      value={v.size} 
+      onChange={e => handleVariantInputChange(index, 'size', e.target.value)} 
+    />
 
-      {variantForm.map((v, index) => (
-        <div key={index} className="grid grid-cols-1 md:grid-cols-10 gap-4 items-center p-4 bg-white/[0.02] rounded-2xl border border-white/5">
-          <input 
-            placeholder="Size" 
-            className="md:col-span-3 bg-white/5 border border-white/10 p-3 rounded-xl outline-none text-sm" 
-            value={v.size} 
-            onChange={e => handleVariantInputChange(index, 'size', e.target.value)} 
-          />
-          <input 
-            placeholder="Color" 
-            className="md:col-span-3 bg-white/5 border border-white/10 p-3 rounded-xl outline-none text-sm" 
-            value={v.color} 
-            onChange={e => handleVariantInputChange(index, 'color', e.target.value)} 
-          />
-          <input 
-            type="number" 
-            placeholder="Qty" 
-            className="md:col-span-3 bg-white/5 border border-white/10 p-3 rounded-xl outline-none text-sm" 
-            value={v.stockQuantity || ''} 
-            onChange={e => handleVariantInputChange(index, 'stockQuantity', +e.target.value)} 
-          />
-          <button 
-            onClick={() => removeVariantRow(index)}
-            className="md:col-span-1 text-red-500 hover:bg-red-500/10 h-10 w-10 flex items-center justify-center rounded-full transition-all"
-            title="Remove row"
-          >
-            ✕
-          </button>
-        </div>
-      ))}
+    {/* Color Text Input */}
+    <input 
+      placeholder="Color Name" 
+      className="md:col-span-3 bg-white/5 border border-white/10 p-3 rounded-xl outline-none text-sm text-white focus:border-blue-500/50" 
+      value={v.color} 
+      onChange={e => handleVariantInputChange(index, 'color', e.target.value)} 
+    />
+
+    {/* NEW: Visual Color Picker (Optional but helpful) */}
+    <div className="md:col-span-1 flex justify-center items-center">
+       <input 
+         type="color" 
+         className="w-8 h-8 rounded-lg bg-transparent border-none cursor-pointer"
+         value={v.colorCode || '#000000'} 
+         onChange={e => handleVariantInputChange(index, 'colorCode', e.target.value)}
+       />
+    </div>
+
+    {/* Qty Input */}
+    <input 
+      type="number" 
+      placeholder="Qty" 
+      className="md:col-span-4 bg-white/5 border border-white/10 p-3 rounded-xl outline-none text-sm text-white focus:border-blue-500/50" 
+      value={v.stockQuantity || ''} 
+      onChange={e => handleVariantInputChange(index, 'stockQuantity', +e.target.value)} 
+    />
+
+    {/* Remove Button */}
+    <button 
+      onClick={() => removeVariantRow(index)}
+      className="md:col-span-1 text-red-500 hover:bg-red-500/10 h-10 w-10 flex items-center justify-center rounded-full transition-all"
+      title="Remove row"
+    >
+      ✕
+    </button>
+  </div>
+))}
 
       <button 
         onClick={handleAddVariantToExisting} 

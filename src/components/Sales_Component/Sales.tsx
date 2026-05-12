@@ -262,27 +262,39 @@ const executePrint = (saleId: string, win: Window | null, printItems: SaleItem[]
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const staff = (user.fullName || user.username || "Staff").toUpperCase();
   
-  const isWholesaleBill = printItems.some(i => i.quantity >= 6);
-  const billMode = isWholesaleBill ? "WHOLESALE BILL" : "RETAIL BILL";
+  // Check if this specific bill contains ANY wholesale items
+  const hasWholesale = printItems.some(i => i.quantity >= 6);
+  const hasRetail = printItems.some(i => i.quantity < 6);
+  
+  // Determine Header Title
+  let billHeader = "RETAIL BILL";
+  if (hasWholesale && !hasRetail) billHeader = "WHOLESALE BILL";
+  if (hasWholesale && hasRetail) billHeader = "MIXED SALE BILL";
 
-  // Generate rows with item-specific barcodes
-  const rows = printItems.map(item => `
-    <div style="margin-bottom: 12px; border-bottom: 1px dashed #ccc; padding-bottom: 8px;">
-      <div style="font-weight:bold; font-size:13px;">${item.productName.toUpperCase()}</div>
-      
-      <!-- Item Barcode Image -->
-      <div style="margin: 5px 0;">
-        <img src="https://bwipjs-api.metafloor.com/?bcid=code128&text=${String(item.barcodeId)}&scale=1&height=10&includetext=false" 
-             style="height: 30px; width: auto;" />
-        <div style="font-size:9px; color: #555;">ID: ${String(item.barcodeId)}</div>
-      </div>
+  // Generate rows with specific pricing indicators
+  const rows = printItems.map(item => {
+    const isWS = item.quantity >= 6;
+    const priceLabel = isWS ? "[WS]" : "[RT]";
+    
+    return `
+      <div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dotted #000;">
+        <div style="font-weight:bold; font-size:13px; text-align:left; margin-bottom: 4px;">
+          ${item.productName.toUpperCase()}
+        </div>
+        
+        <div style="text-align:center; margin: 5px 0;">
+          <img src="https://bwipjs-api.metafloor.com/?bcid=code128&text=${String(item.barcodeId)}&scale=1&height=8&includetext=false" 
+               style="height: 25px; width: auto; display: inline-block;" />
+          <div style="font-size:9px; color: #444;">ID: ${item.barcodeId}</div>
+        </div>
 
-      <div style="display:flex; justify-content:space-between; font-size:12px;">
-        <span>${item.quantity} x ${item.unitPrice.toFixed(2)} ${item.quantity >= 6 ? '(WS)' : '(RT)'}</span>
-        <span>LKR ${(item.quantity * item.unitPrice).toFixed(2)}</span>
+        <div style="display:flex; justify-content:space-between; font-size:12px; font-family: monospace;">
+          <span>${item.quantity} x ${item.unitPrice.toFixed(2)} <b style="font-size:10px;">${priceLabel}</b></span>
+          <span style="font-weight:bold;">LKR ${(item.quantity * item.unitPrice).toFixed(2)}</span>
+        </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 
   win.document.open();
   win.document.write(`
@@ -290,55 +302,79 @@ const executePrint = (saleId: string, win: Window | null, printItems: SaleItem[]
       <head>
         <title>Receipt - ${saleId}</title>
         <style>
-          body { font-family: 'Courier New', monospace; width: 300px; margin: 0 auto; padding: 10px; color: #000; }
+          @page { size: auto; margin: 0mm; }
+          body { 
+            font-family: 'Courier New', monospace; 
+            width: 280px; 
+            margin: 0 auto; 
+            padding: 15px 5px; 
+            color: #000;
+            background-color: #fff;
+          }
           .center { text-align: center; }
-          .bold { font-weight: bold; }
           .mode-badge { 
             border: 2px solid #000; 
-            padding: 5px; 
+            padding: 6px; 
             margin: 10px 0; 
             text-align: center; 
             font-weight: bold; 
-            letter-spacing: 2px;
+            font-size: 15px;
+            letter-spacing: 1px;
           }
           .total-line { display: flex; justify-content: space-between; font-weight: bold; margin-top: 5px; }
-          img { display: block; margin: 0 auto; }
+          .hr-double { border-top: 3px double #000; margin: 10px 0; }
+          .footer-note { font-size: 10px; margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px; }
         </style>
       </head>
       <body>
-        <h2 class="center" style="margin:0;">හෙළ සිත් රූ</h2>
-        <p class="center" style="font-size:10px;">${new Date().toLocaleString()}<br>Staff: ${staff}</p>
+        <h2 class="center" style="margin:0; font-size: 20px;">හෙළ සිත් රූ</h2>
+        <p class="center" style="font-size:11px; margin: 4px 0;">
+          ${new Date().toLocaleString()}<br>
+          STAFF: ${staff}
+        </p>
         
-        <div class="mode-badge">${billMode}</div>
+        <div class="mode-badge">${billHeader}</div>
 
         <div style="margin-top:10px;">
-          <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; border-bottom:1px solid #000; margin-bottom:10px;">
-            <span>ITEM / BARCODE</span>
+          <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; border-bottom:2px solid #000; padding-bottom:4px; margin-bottom:8px;">
+            <span>DESCRIPTION</span>
             <span>TOTAL</span>
           </div>
           ${rows}
         </div>
 
-        <div style="margin-top: 10px; border-top: 2px solid #000; padding-top: 5px;">
-          <div class="total-line"><span>NET TOTAL:</span><span>LKR ${total.toFixed(2)}</span></div>
-          <div class="total-line" style="font-weight:normal; font-size:12px;"><span>CASH:</span><span>LKR ${cash.toFixed(2)}</span></div>
-          <div class="total-line" style="font-weight:normal; font-size:12px;"><span>BALANCE:</span><span>LKR ${bal.toFixed(2)}</span></div>
+        <div class="hr-double"></div>
+        
+        <div class="total-line" style="font-size: 16px;">
+            <span>NET TOTAL:</span>
+            <span>LKR ${total.toFixed(2)}</span>
+        </div>
+        
+        <div class="total-line" style="font-weight:normal; font-size:13px; margin-top:8px;">
+            <span>CASH:</span>
+            <span>LKR ${cash.toFixed(2)}</span>
+        </div>
+        
+        <div class="total-line" style="font-weight:normal; font-size:13px;">
+            <span>BALANCE:</span>
+            <span style="border-bottom: 1px solid #000;">LKR ${bal.toFixed(2)}</span>
         </div>
 
-        <div class="center" style="margin-top:20px; border-top: 1px dashed #000; padding-top: 15px;">
-          <!-- Sale ID Barcode Image -->
-          <img src="https://bwipjs-api.metafloor.com/?bcid=code128&text=${saleId}&scale=2&height=15" style="max-width:100%"/>
-          <div style="font-size:11px; font-weight:bold; margin-top:5px;">SALE INVOICE: ${saleId}</div>
-          <p style="font-size:9px;">Thank you! Please keep this receipt for returns.</p>
+        <div class="center" style="margin-top:25px;">
+          <img src="https://bwipjs-api.metafloor.com/?bcid=code128&text=${saleId}&scale=2&height=12" style="max-width:100%; display:block; margin: 0 auto;"/>
+          <div style="font-size:11px; font-weight:bold; margin-top:5px;">INVOICE: ${saleId}</div>
+          
+          <div class="footer-note">
+            <p>Thank you for your business!<br>Items can be exchanged within 7 days with this receipt.</p>
+          </div>
         </div>
 
         <script>
           window.onload = () => {
-            // Give images time to load before printing
             setTimeout(() => { 
               window.print(); 
               window.close(); 
-            }, 800);
+            }, 1000);
           };
         </script>
       </body>
@@ -346,7 +382,6 @@ const executePrint = (saleId: string, win: Window | null, printItems: SaleItem[]
   `);
   win.document.close();
 };
-
 
   return (
     <div className="sales-page-container">
@@ -360,20 +395,39 @@ const executePrint = (saleId: string, win: Window | null, printItems: SaleItem[]
           {/* <span> (Amashi Pathiraja)</span> */}
         </div>
 
-        <div className="search-bar-container">
-          <input
-            type="text"
-            placeholder="Scan or type barcode..."
-            value={manualSearch}
-            onChange={(e) => setManualSearch(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') processBarcode(manualSearch);
-            }}
-          />
-          <button onClick={() => processBarcode(manualSearch)}>
-            Add Item
-          </button>
-        </div>
+        <div className="search-bar-container" style={{ display: 'flex', gap: '10px', background: '#fff', padding: '10px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+  <input
+    type="text"
+    placeholder="Scan or type barcode here..."
+    value={manualSearch}
+    onChange={(e) => setManualSearch(e.target.value)}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter') processBarcode(manualSearch);
+    }}
+    style={{
+      flex: 1,
+      padding: "12px",
+      borderRadius: "6px",
+      border: "1px solid #ced4da",
+      fontSize: "1rem",
+      outline: "none"
+    }}
+  />
+  <button 
+    onClick={() => processBarcode(manualSearch)}
+    style={{
+      padding: "0 20px",
+      backgroundColor: "#2563eb",
+      color: "white",
+      border: "none",
+      borderRadius: "6px",
+      fontWeight: "bold",
+      cursor: "pointer"
+    }}
+  >
+    ADD ITEM
+  </button>
+</div>
 
         <div className="scan-status">
           {buffer ? `Scanning: ${buffer}` : "🟢 System Ready"}
@@ -418,38 +472,62 @@ const executePrint = (saleId: string, win: Window | null, printItems: SaleItem[]
       </td>
 
       {/* 4. QUANTITY - CLICK TO EDIT */}
-      <td>
-        {editingId === item.barcodeId ? (
-          <input
-            type="number"
-            min="1"
-            className="qty-edit-input"
-            value={item.quantity}
-            onChange={(e) =>
-              updateQuantity(item.barcodeId, Math.max(1, Number(e.target.value)))
-            }
-            onBlur={() => setEditingId(null)} // Save/Close when clicking away
-            onKeyDown={(e) => e.key === 'Enter' && setEditingId(null)} // Save on Enter
-            autoFocus
-            style={{ width: "70px", padding: "4px", textAlign: "center" }}
-          />
-        ) : (
-          <div 
-            onClick={() => setEditingId(item.barcodeId)} 
-            style={{ 
-              cursor: 'pointer', 
-              padding: '5px',
-              backgroundColor: '#f9fafb',
-              borderRadius: '4px',
-              textAlign: 'center',
-              border: '1px solid #e5e7eb'
-            }}
-            title="Click to change quantity"
-          >
-            {item.quantity} <span style={{fontSize: '10px'}}>✏️</span>
-          </div>
-        )}
-      </td>
+      {/* 4. QUANTITY - CLICK TO EDIT */}
+<td style={{ width: "130px" }}>
+  {editingId === item.barcodeId ? (
+    <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+      <input
+        type="number"
+        min="1"
+        className="qty-edit-input"
+        value={item.quantity}
+        onChange={(e) =>
+          updateQuantity(item.barcodeId, Math.max(1, Number(e.target.value)))
+        }
+        onBlur={() => setEditingId(null)}
+        onKeyDown={(e) => e.key === 'Enter' && setEditingId(null)}
+        autoFocus
+        style={{ 
+          width: "100%", 
+          padding: "8px", 
+          textAlign: "center", 
+          border: "2px solid #3b82f6", 
+          borderRadius: "6px",
+          outline: "none"
+        }}
+      />
+      <button 
+        onClick={() => setEditingId(null)}
+        style={{ background: "#3b82f6", color: "white", border: "none", borderRadius: "6px", padding: "8px" }}
+      >
+        OK
+      </button>
+    </div>
+  ) : (
+    <div 
+      onClick={() => setEditingId(item.barcodeId)} 
+      className="qty-display-box"
+      style={{ 
+        cursor: 'pointer', 
+        padding: '8px',
+        backgroundColor: '#fff',
+        borderRadius: '6px',
+        textAlign: 'center',
+        border: '1px solid #d1d5db',
+        fontWeight: 'bold',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: '5px'
+      }}
+      onMouseOver={(e) => (e.currentTarget.style.borderColor = '#3b82f6')}
+      onMouseOut={(e) => (e.currentTarget.style.borderColor = '#d1d5db')}
+    >
+      {item.quantity} 
+      <span style={{fontSize: '12px', opacity: 0.5}}>✏️</span>
+    </div>
+  )}
+</td>
 
       {/* 5. TOTAL */}
       <td>LKR {(item.unitPrice * item.quantity).toLocaleString()}</td>
@@ -489,8 +567,41 @@ const executePrint = (saleId: string, win: Window | null, printItems: SaleItem[]
             color: items.some(i => i.quantity >= 6) ? "#b45309" : "#374151",
             border: "1px solid"
           }}>
-            MODE: {items.some(i => i.quantity >= 6) ? "WHOLESALE" : "RETAIL"}
-          </div>
+{/* 1. SALE MODE DISPLAY (MIXED MODE LOGIC) */}
+{(() => {
+  const hasWS = items.some(i => i.quantity >= 6);
+  const hasRT = items.some(i => i.quantity > 0 && i.quantity < 6);
+  
+  let label = "RETAIL SALE";
+  let color = "#374151"; 
+  let bg = "#f3f4f6";
+
+  if (hasWS && hasRT) {
+    label = "MIXED SALE";
+    color = "#7c3aed"; // Purple
+    bg = "#f5f3ff";
+  } else if (hasWS) {
+    label = "WHOLESALE SALE";
+    color = "#b45309"; // Orange
+    bg = "#fef3c7";
+  }
+
+  return (
+    <div style={{
+      padding: "12px",
+      backgroundColor: bg,
+      borderRadius: "8px",
+      marginBottom: "15px",
+      fontWeight: "bold",
+      textAlign: "center",
+      color: color,
+      border: `2px solid ${color}`,
+      fontSize: "0.9rem"
+    }}>
+      MODE: {label}
+    </div>
+  );
+})()}          </div>
 
           {/* 2. DISCOUNT INPUT */}
           <div style={{ marginBottom: "15px" }}>

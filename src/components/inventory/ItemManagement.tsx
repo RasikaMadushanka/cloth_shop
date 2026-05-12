@@ -40,8 +40,9 @@ function ItemManagement() {
   }, []);
 
   const filteredProducts = products.filter(p =>
-    p.productName.toLowerCase().includes(search.toLowerCase())
-  );
+  p.productName.toLowerCase().includes(search.toLowerCase()) ||
+  p.variants.some(v => v.barcodeId.includes(search) || v.sku.toLowerCase().includes(search.toLowerCase()))
+);
 
   return (
     <div className="inventory_table_container">
@@ -79,54 +80,56 @@ function ItemManagement() {
           </thead>
 
           <tbody>
-            {filteredProducts.map(product =>
-              product.variants.map((v) => (
-                <tr key={v.barcodeId}>
+  {filteredProducts.map(product =>
+    product.variants.map((v) => (
+      <tr key={v.barcodeId}>
 
-                  {/* PRODUCT */}
-                  <td className="product_name">
-                    {product.productName}
-                  </td>
+        {/* PRODUCT NAME */}
+        <td className="product_name">
+          {product.productName}
+        </td>
 
-                  {/* CATEGORY */}
-                  <td>{product.category}</td>
+        {/* CATEGORY */}
+        <td>{product.category}</td>
 
-                  {/* COLORS */}
-                  <td>
-                    {product.availableColors.map((c, i) => (
-                      <span key={i} className="tag color">{c}</span>
-                    ))}
-                  </td>
+        {/* COLOR - Now shows ONLY the variant's color */}
+        <td>
+          <span className="tag color">{v.color}</span>
+        </td>
 
-                  {/* SIZES */}
-                  <td>
-                    {product.availableSizes.map((s, i) => (
-                      <span key={i} className="tag size">{s}</span>
-                    ))}
-                  </td>
+        {/* SIZE - Now shows ONLY the variant's size */}
+        <td>
+          <span className="tag size">{v.size}</span>
+        </td>
 
-                  {/* BARCODE */}
-                  <td className="mono">{v.barcodeId}</td>
+        {/* BARCODE */}
+        <td className="mono" style={{ color: '#2563eb' }}>{v.barcodeId}</td>
 
-                  {/* SKU */}
-                  <td>{v.sku}</td>
+        {/* SKU */}
+        <td>{v.sku}</td>
 
-                  {/* PRICE */}
-                  <td className="price">
-                    LKR {(v.priceOverride ?? product.basePrice).toLocaleString()}
-                  </td>
+        {/* PRICE */}
+        <td className="price" style={{ fontWeight: 'bold' }}>
+          LKR {(v.priceOverride ?? product.basePrice).toLocaleString()}
+        </td>
 
-                  {/* STOCK */}
-                  <td>
-                    <span className={v.stockQuantity < 10 ? "low" : "ok"}>
-                      {v.stockQuantity}
-                    </span>
-                  </td>
+        {/* STOCK */}
+        <td>
+          <span className={`stock-badge ${v.stockQuantity < 10 ? "low" : "ok"}`} 
+                style={{ 
+                  padding: '4px 8px', 
+                  borderRadius: '4px',
+                  backgroundColor: v.stockQuantity < 10 ? '#fee2e2' : '#dcfce7',
+                  color: v.stockQuantity < 10 ? '#b91c1c' : '#15803d'
+                }}>
+            {v.stockQuantity}
+          </span>
+        </td>
 
-                </tr>
-              ))
-            )}
-          </tbody>
+      </tr>
+    ))
+  )}
+</tbody>
 
         </table>
       </div>
