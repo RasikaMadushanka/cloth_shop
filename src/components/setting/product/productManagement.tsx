@@ -44,7 +44,27 @@ const ProductManagement: React.FC = () => {
     retailPrice: '' as unknown as number,
     discountPercentage: 0
   });
-  const [variantForm, setVariantForm] = useState<Variant>({ size: '', color: '', stockQuantity: 0, priceOverride: 0 });
+  // 1. Change state to an array
+const [variantForm, setVariantForm] = useState<Variant[]>([{ size: '', color: '', stockQuantity: 0, priceOverride: 0 }]);
+
+// 2. Add helper to add a new empty row
+const addVariantRow = () => {
+  setVariantForm([...variantForm, { size: '', color: '', stockQuantity: 0, priceOverride: 0 }]);
+};
+
+// 3. Add helper to remove a specific row
+const removeVariantRow = (index: number) => {
+  if (variantForm.length > 1) {
+    setVariantForm(variantForm.filter((_, i) => i !== index));
+  }
+};
+
+// 4. Add helper to update specific fields in the array
+const handleVariantInputChange = (index: number, field: keyof Variant, value: any) => {
+  const updated = [...variantForm];
+  updated[index] = { ...updated[index], [field]: value };
+  setVariantForm(updated);
+};
 
   const loadProducts = async () => {
     try {
@@ -142,39 +162,39 @@ const ProductManagement: React.FC = () => {
   };
 
   const handleAddVariantToExisting = async () => {
-    if (selectedProductId === "" || isNaN(Number(selectedProductId))) {
-      alert("Please select a Master Product first.");
-      return;
-    }
+  if (selectedProductId === "" || isNaN(Number(selectedProductId))) {
+    alert("Please select a Master Product first.");
+    return;
+  }
 
-    const targetProduct = products.find(p => p.productId === Number(selectedProductId));
-    if (!targetProduct) return;
+  const targetProduct = products.find(p => p.productId === Number(selectedProductId));
+  if (!targetProduct) return;
 
-    const existingVariants = targetProduct.variants || [];
-    const realBarcode = generateRealBarcode(targetProduct.productId, existingVariants.length + 1);
+  const existingVariants = targetProduct.variants || [];
+  
+  // Create new variants with barcodes
+  const newVariantsWithBarcodes = variantForm.map((v, index) => ({
+    ...v,
+    barcodeId: generateRealBarcode(targetProduct.productId, existingVariants.length + index + 1),
+    priceOverride: v.priceOverride > 0 ? v.priceOverride : targetProduct.retailPrice
+  }));
 
-    const newVariant: Variant = {
-      ...variantForm,
-      barcodeId: realBarcode,
-      // Default to Retail Price if no override is provided
-      priceOverride: variantForm.priceOverride > 0 ? variantForm.priceOverride : targetProduct.retailPrice
-    };
-
-    const updatedDto: Product = {
-      ...targetProduct,
-      variants: [...existingVariants, newVariant]
-    };
-
-    try {
-      await productApi.update(targetProduct.productId, updatedDto);
-      setVariantForm({ size: '', color: '', stockQuantity: 0, priceOverride: 0 });
-      setSelectedProductId("");
-      await loadProducts();
-      alert("Variant added successfully!");
-    } catch (error) {
-      alert("Failed to append variant.");
-    }
+  const updatedDto: Product = {
+    ...targetProduct,
+    variants: [...existingVariants, ...newVariantsWithBarcodes]
   };
+
+  try {
+    await productApi.update(targetProduct.productId, updatedDto);
+    // Reset to a single empty row
+    setVariantForm([{ size: '', color: '', stockQuantity: 0, priceOverride: 0 }]);
+    setSelectedProductId("");
+    await loadProducts();
+    alert(`Successfully added ${newVariantsWithBarcodes.length} variants!`);
+  } catch (error) {
+    alert("Failed to append variants.");
+  }
+};
 
   const handleItemPriceChange = async (barcode: string) => {
     if (!barcode) return;
@@ -284,22 +304,68 @@ const ProductManagement: React.FC = () => {
             </form>
           </section>
         )}
+{activeTab === 'UPDATE_VARIANT' && (
+  <section className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2rem] p-8 shadow-2xl">
+    <div className="flex justify-between items-center mb-6">
+      <h2 className="text-xl font-black text-white uppercase italic">Append New Variants</h2>
+      <button 
+        onClick={addVariantRow}
+        className="px-4 py-2 bg-blue-600/20 text-blue-400 border border-blue-600/30 rounded-xl text-[10px] font-black hover:bg-blue-600 hover:text-white transition-all"
+      >
+        + ADD ROW
+      </button>
+    </div>
 
-        {activeTab === 'UPDATE_VARIANT' && (
-          <section className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2rem] p-8 shadow-2xl">
-            <h2 className="text-xl font-black text-white mb-6 uppercase italic">Append New Variants</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <select className="bg-white/5 border border-white/10 p-4 rounded-xl outline-none md:col-span-3" value={selectedProductId} onChange={e => setSelectedProductId(e.target.value === "" ? "" : Number(e.target.value))}>
-                <option value="">Choose Master Product...</option>
-                {products.map(p => <option key={p.productId} value={p.productId}>{p.productName} (ID: {p.productId})</option>)}
-              </select>
-              <input placeholder="Size" className="bg-white/5 border border-white/10 p-4 rounded-xl outline-none" value={variantForm.size} onChange={e => setVariantForm({ ...variantForm, size: e.target.value })} />
-              <input placeholder="Color" className="bg-white/5 border border-white/10 p-4 rounded-xl outline-none" value={variantForm.color} onChange={e => setVariantForm({ ...variantForm, color: e.target.value })} />
-              <input type="number" placeholder="Stock Qty" className="bg-white/5 border border-white/10 p-4 rounded-xl outline-none" value={variantForm.stockQuantity || ''} onChange={e => setVariantForm({ ...variantForm, stockQuantity: +e.target.value })} />
-              <button onClick={handleAddVariantToExisting} className="md:col-span-3 bg-amber-600 py-4 rounded-xl font-black text-white uppercase text-[11px] tracking-widest">Generate Barcode & Add</button>
-            </div>
-          </section>
-        )}
+    <div className="space-y-4">
+      <select 
+        className="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none text-white mb-2" 
+        value={selectedProductId} 
+        onChange={e => setSelectedProductId(e.target.value === "" ? "" : Number(e.target.value))}
+      >
+        <option value="">Choose Master Product...</option>
+        {products.map(p => <option key={p.productId} value={p.productId}>{p.productName} (ID: {p.productId})</option>)}
+      </select>
+
+      {variantForm.map((v, index) => (
+        <div key={index} className="grid grid-cols-1 md:grid-cols-10 gap-4 items-center p-4 bg-white/[0.02] rounded-2xl border border-white/5">
+          <input 
+            placeholder="Size" 
+            className="md:col-span-3 bg-white/5 border border-white/10 p-3 rounded-xl outline-none text-sm" 
+            value={v.size} 
+            onChange={e => handleVariantInputChange(index, 'size', e.target.value)} 
+          />
+          <input 
+            placeholder="Color" 
+            className="md:col-span-3 bg-white/5 border border-white/10 p-3 rounded-xl outline-none text-sm" 
+            value={v.color} 
+            onChange={e => handleVariantInputChange(index, 'color', e.target.value)} 
+          />
+          <input 
+            type="number" 
+            placeholder="Qty" 
+            className="md:col-span-3 bg-white/5 border border-white/10 p-3 rounded-xl outline-none text-sm" 
+            value={v.stockQuantity || ''} 
+            onChange={e => handleVariantInputChange(index, 'stockQuantity', +e.target.value)} 
+          />
+          <button 
+            onClick={() => removeVariantRow(index)}
+            className="md:col-span-1 text-red-500 hover:bg-red-500/10 h-10 w-10 flex items-center justify-center rounded-full transition-all"
+            title="Remove row"
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+
+      <button 
+        onClick={handleAddVariantToExisting} 
+        className="w-full bg-amber-600 py-4 rounded-xl font-black text-white uppercase text-[11px] tracking-widest mt-6"
+      >
+        Generate Barcodes & Add {variantForm.length} Variant(s)
+      </button>
+    </div>
+  </section>
+)}
 
         <div className="space-y-8">
           <h2 className="text-sm font-black text-white uppercase tracking-[0.4em] italic opacity-50">Global Inventory Master</h2>
