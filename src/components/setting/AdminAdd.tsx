@@ -8,8 +8,8 @@ interface AdminDto {
   password?: string;
   role: string;
   fullName: string;
-  NIC: string;      // Matches JSON
-  Address: string;  // Matches JSON
+  NIC: string;      
+  Address: string; 
   isActive: boolean;
 }
 
@@ -18,7 +18,6 @@ const AdminManagement: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
 
-  // CRITICAL FIX: Initial state keys must match Interface/JSON casing
   const [formData, setFormData] = useState<AdminDto>({
     adminId: 0,
     username: '',

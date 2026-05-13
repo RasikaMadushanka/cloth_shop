@@ -46,32 +46,32 @@ const ProductManagement: React.FC = () => {
     discountPercentage: 0
   });
   // 1. Change state to an array
-// Update the initial state
-const [variantForm, setVariantForm] = useState<Variant[]>([
-  { size: '', color: '', colorCode: '#000000', stockQuantity: 0, priceOverride: 0 }
-]);
-
-// Update the helper to include colorCode in new rows
-const addVariantRow = () => {
-  setVariantForm([
-    ...variantForm, 
+  // Update the initial state
+  const [variantForm, setVariantForm] = useState<Variant[]>([
     { size: '', color: '', colorCode: '#000000', stockQuantity: 0, priceOverride: 0 }
   ]);
-};
 
-// 3. Add helper to remove a specific row
-const removeVariantRow = (index: number) => {
-  if (variantForm.length > 1) {
-    setVariantForm(variantForm.filter((_, i) => i !== index));
-  }
-};
+  // Update the helper to include colorCode in new rows
+  const addVariantRow = () => {
+    setVariantForm([
+      ...variantForm,
+      { size: '', color: '', colorCode: '#000000', stockQuantity: 0, priceOverride: 0 }
+    ]);
+  };
 
-// 4. Add helper to update specific fields in the array
-const handleVariantInputChange = (index: number, field: keyof Variant, value: any) => {
-  const updated = [...variantForm];
-  updated[index] = { ...updated[index], [field]: value };
-  setVariantForm(updated);
-};
+  // 3. Add helper to remove a specific row
+  const removeVariantRow = (index: number) => {
+    if (variantForm.length > 1) {
+      setVariantForm(variantForm.filter((_, i) => i !== index));
+    }
+  };
+
+  // 4. Add helper to update specific fields in the array
+  const handleVariantInputChange = (index: number, field: keyof Variant, value: any) => {
+    const updated = [...variantForm];
+    updated[index] = { ...updated[index], [field]: value };
+    setVariantForm(updated);
+  };
 
   const loadProducts = async () => {
     try {
@@ -169,39 +169,39 @@ const handleVariantInputChange = (index: number, field: keyof Variant, value: an
   };
 
   const handleAddVariantToExisting = async () => {
-  if (selectedProductId === "" || isNaN(Number(selectedProductId))) {
-    alert("Please select a Master Product first.");
-    return;
-  }
+    if (selectedProductId === "" || isNaN(Number(selectedProductId))) {
+      alert("Please select a Master Product first.");
+      return;
+    }
 
-  const targetProduct = products.find(p => p.productId === Number(selectedProductId));
-  if (!targetProduct) return;
+    const targetProduct = products.find(p => p.productId === Number(selectedProductId));
+    if (!targetProduct) return;
 
-  const existingVariants = targetProduct.variants || [];
-  
-  // Create new variants with barcodes
-  const newVariantsWithBarcodes = variantForm.map((v, index) => ({
-    ...v,
-    barcodeId: generateRealBarcode(targetProduct.productId, existingVariants.length + index + 1),
-    priceOverride: v.priceOverride > 0 ? v.priceOverride : targetProduct.retailPrice
-  }));
+    const existingVariants = targetProduct.variants || [];
 
-  const updatedDto: Product = {
-    ...targetProduct,
-    variants: [...existingVariants, ...newVariantsWithBarcodes]
+    // Create new variants with barcodes
+    const newVariantsWithBarcodes = variantForm.map((v, index) => ({
+      ...v,
+      barcodeId: generateRealBarcode(targetProduct.productId, existingVariants.length + index + 1),
+      priceOverride: v.priceOverride > 0 ? v.priceOverride : targetProduct.retailPrice
+    }));
+
+    const updatedDto: Product = {
+      ...targetProduct,
+      variants: [...existingVariants, ...newVariantsWithBarcodes]
+    };
+
+    try {
+      await productApi.update(targetProduct.productId, updatedDto);
+      // Reset to a single empty row
+      setVariantForm([{ size: '', color: '', stockQuantity: 0, priceOverride: 0 }]);
+      setSelectedProductId("");
+      await loadProducts();
+      alert(`Successfully added ${newVariantsWithBarcodes.length} variants!`);
+    } catch (error) {
+      alert("Failed to append variants.");
+    }
   };
-
-  try {
-    await productApi.update(targetProduct.productId, updatedDto);
-    // Reset to a single empty row
-    setVariantForm([{ size: '', color: '', stockQuantity: 0, priceOverride: 0 }]);
-    setSelectedProductId("");
-    await loadProducts();
-    alert(`Successfully added ${newVariantsWithBarcodes.length} variants!`);
-  } catch (error) {
-    alert("Failed to append variants.");
-  }
-};
 
   const handleItemPriceChange = async (barcode: string) => {
     if (!barcode) return;
@@ -311,85 +311,85 @@ const handleVariantInputChange = (index: number, field: keyof Variant, value: an
             </form>
           </section>
         )}
-{activeTab === 'UPDATE_VARIANT' && (
-  <section className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2rem] p-8 shadow-2xl">
-    <div className="flex justify-between items-center mb-6">
-      <h2 className="text-xl font-black text-white uppercase italic">Append New Variants</h2>
-      <button 
-        onClick={addVariantRow}
-        className="px-4 py-2 bg-blue-600/20 text-blue-400 border border-blue-600/30 rounded-xl text-[10px] font-black hover:bg-blue-600 hover:text-white transition-all"
-      >
-        + ADD ROW
-      </button>
-    </div>
+        {activeTab === 'UPDATE_VARIANT' && (
+          <section className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2rem] p-8 shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-black text-white uppercase italic">Append New Variants</h2>
+              <button
+                onClick={addVariantRow}
+                className="px-4 py-2 bg-blue-600/20 text-blue-400 border border-blue-600/30 rounded-xl text-[10px] font-black hover:bg-blue-600 hover:text-white transition-all"
+              >
+                + ADD ROW
+              </button>
+            </div>
 
-    <div className="space-y-4">
-      <select 
-        className="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none text-white mb-2" 
-        value={selectedProductId} 
-        onChange={e => setSelectedProductId(e.target.value === "" ? "" : Number(e.target.value))}
-      >
-        <option value="">Choose Master Product...</option>
-        {products.map(p => <option key={p.productId} value={p.productId}>{p.productName} (ID: {p.productId})</option>)}
-      </select>
-{variantForm.map((v, index) => (
-  <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center p-4 bg-white/[0.02] rounded-2xl border border-white/5">
-    
-    {/* Size Input */}
-    <input 
-      placeholder="Size" 
-      className="md:col-span-3 bg-white/5 border border-white/10 p-3 rounded-xl outline-none text-sm text-white focus:border-blue-500/50" 
-      value={v.size} 
-      onChange={e => handleVariantInputChange(index, 'size', e.target.value)} 
-    />
+            <div className="space-y-4">
+              <select
+                className="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none text-white mb-2"
+                value={selectedProductId}
+                onChange={e => setSelectedProductId(e.target.value === "" ? "" : Number(e.target.value))}
+              >
+                <option value="">Choose Master Product...</option>
+                {products.map(p => <option key={p.productId} value={p.productId}>{p.productName} (ID: {p.productId})</option>)}
+              </select>
+              {variantForm.map((v, index) => (
+                <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center p-4 bg-white/[0.02] rounded-2xl border border-white/5">
 
-    {/* Color Text Input */}
-    <input 
-      placeholder="Color Name" 
-      className="md:col-span-3 bg-white/5 border border-white/10 p-3 rounded-xl outline-none text-sm text-white focus:border-blue-500/50" 
-      value={v.color} 
-      onChange={e => handleVariantInputChange(index, 'color', e.target.value)} 
-    />
+                  {/* Size Input */}
+                  <input
+                    placeholder="Size"
+                    className="md:col-span-3 bg-white/5 border border-white/10 p-3 rounded-xl outline-none text-sm text-white focus:border-blue-500/50"
+                    value={v.size}
+                    onChange={e => handleVariantInputChange(index, 'size', e.target.value)}
+                  />
 
-    {/* NEW: Visual Color Picker (Optional but helpful) */}
-    <div className="md:col-span-1 flex justify-center items-center">
-       <input 
-         type="color" 
-         className="w-8 h-8 rounded-lg bg-transparent border-none cursor-pointer"
-         value={v.colorCode || '#000000'} 
-         onChange={e => handleVariantInputChange(index, 'colorCode', e.target.value)}
-       />
-    </div>
+                  {/* Color Text Input */}
+                  <input
+                    placeholder="Color Name"
+                    className="md:col-span-3 bg-white/5 border border-white/10 p-3 rounded-xl outline-none text-sm text-white focus:border-blue-500/50"
+                    value={v.color}
+                    onChange={e => handleVariantInputChange(index, 'color', e.target.value)}
+                  />
 
-    {/* Qty Input */}
-    <input 
-      type="number" 
-      placeholder="Qty" 
-      className="md:col-span-4 bg-white/5 border border-white/10 p-3 rounded-xl outline-none text-sm text-white focus:border-blue-500/50" 
-      value={v.stockQuantity || ''} 
-      onChange={e => handleVariantInputChange(index, 'stockQuantity', +e.target.value)} 
-    />
+                  {/* NEW: Visual Color Picker (Optional but helpful) */}
+                  <div className="md:col-span-1 flex justify-center items-center">
+                    <input
+                      type="color"
+                      className="w-8 h-8 rounded-lg bg-transparent border-none cursor-pointer"
+                      value={v.colorCode || '#000000'}
+                      onChange={e => handleVariantInputChange(index, 'colorCode', e.target.value)}
+                    />
+                  </div>
 
-    {/* Remove Button */}
-    <button 
-      onClick={() => removeVariantRow(index)}
-      className="md:col-span-1 text-red-500 hover:bg-red-500/10 h-10 w-10 flex items-center justify-center rounded-full transition-all"
-      title="Remove row"
-    >
-      ✕
-    </button>
-  </div>
-))}
+                  {/* Qty Input */}
+                  <input
+                    type="number"
+                    placeholder="Qty"
+                    className="md:col-span-4 bg-white/5 border border-white/10 p-3 rounded-xl outline-none text-sm text-white focus:border-blue-500/50"
+                    value={v.stockQuantity || ''}
+                    onChange={e => handleVariantInputChange(index, 'stockQuantity', +e.target.value)}
+                  />
 
-      <button 
-        onClick={handleAddVariantToExisting} 
-        className="w-full bg-amber-600 py-4 rounded-xl font-black text-white uppercase text-[11px] tracking-widest mt-6"
-      >
-        Generate Barcodes & Add {variantForm.length} Variant(s)
-      </button>
-    </div>
-  </section>
-)}
+                  {/* Remove Button */}
+                  <button
+                    onClick={() => removeVariantRow(index)}
+                    className="md:col-span-1 text-red-500 hover:bg-red-500/10 h-10 w-10 flex items-center justify-center rounded-full transition-all"
+                    title="Remove row"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+
+              <button
+                onClick={handleAddVariantToExisting}
+                className="w-full bg-amber-600 py-4 rounded-xl font-black text-white uppercase text-[11px] tracking-widest mt-6"
+              >
+                Generate Barcodes & Add {variantForm.length} Variant(s)
+              </button>
+            </div>
+          </section>
+        )}
 
         <div className="space-y-8">
           <h2 className="text-sm font-black text-white uppercase tracking-[0.4em] italic opacity-50">Global Inventory Master</h2>

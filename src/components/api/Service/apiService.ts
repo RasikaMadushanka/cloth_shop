@@ -1,5 +1,35 @@
 import api from '../axiosConfig';
 
+// --- SHARED INTERFACES ---
+export interface SalesItemDto {
+    barcodeId: string;
+    varientId: string;
+    itemName: string;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+}
+export interface SaleRecord {
+    saleId: string;
+    adminId: number;
+
+    salesPersonName?: string; // ✅ ADD THIS (IMPORTANT FIX)
+
+    saleType: string;
+    totalAmount: number;
+    discountedApplied: number;
+    discountPercentage: number;
+    netAmount: number;
+    paymentMethod: string;
+    timestamp: string;
+    items: SalesItemDto[];
+}
+
+export interface ReturnPayload {
+    saleId: string;
+    barcodeId: string;
+    quantity: number;
+}
 
 export const productApi = {
   // Now becomes http://localhost:8080/api/products/all
@@ -34,8 +64,14 @@ export const stockApi = {
 
 // 3. SALES CONTROLLER (Matches SaleController.java)
 export const salesApi = {
-  placeOrder: (order: any) => api.post('/api/sales/place-order', order),
-  getSalesReport: (type: string, date: string) => api.get(`/api/sales/report/${type}/${date}`),
+    placeOrder: (order: any) => api.post('/api/sales/place-order', order),
+    getSalesReport: (type: string, date: string) => api.get(`/api/sales/report/${type}/${date}`),
+    getAllSales: () => api.get<SaleRecord[]>('/api/sales/all'),
+    findSalesByBarcode: (barcodeId: string) => 
+        api.get<SaleRecord[]>(`/api/sales/find-by-barcode?barcodeId=${barcodeId}`),
+    
+    // Process Return Endpoint
+    processReturn: (data: ReturnPayload) => api.post('/api/sales/process-return', data),
 };
 
 // 4. ADMIN CONTROLLER (Matches Admin_Controller.java)

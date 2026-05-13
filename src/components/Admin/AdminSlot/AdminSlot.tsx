@@ -11,14 +11,22 @@ import { productApi } from "../../api/Service/apiService";
 /* ================= TYPES ================= */
 
 interface Variant {
+    variantId: string;
+    barcodeId: string;
+    sku: string;
+    color: string;
+    size: string;
     stockQuantity: number;
+    priceOverride: number;
 }
 
 interface Product {
     productId: number;
     productName: string;
-    basePrice: number;
-    totalQuantity: number;
+    retailPrice: number;     // From JSON: 3000.0
+    discountedPrice: number; // From JSON: 3000.0
+    totalQuantity: number;   // From JSON: 49
+    stockStatus: string;
     variants: Variant[];
 }
 
@@ -30,58 +38,62 @@ const AdminSlot: React.FC = () => {
 
     /* ================= FETCH ================= */
     useEffect(() => {
-        const load = async () => {
+        const loadData = async () => {
             try {
                 setLoading(true);
                 const res = await productApi.getAll();
-                setProducts(res.data);
+                // Ensure we handle cases where res.data might be null
+                setProducts(res.data || []);
             } catch (err) {
-                console.error("API error:", err);
+                console.error("API error fetching products:", err);
             } finally {
                 setLoading(false);
             }
         };
 
-        load();
+        loadData();
     }, []);
 
     /* ================= METRICS ================= */
 
+    // 1. Total unique products in the system
     const totalProducts = products.length;
 
+    // 2. Total physical items in stock across all products/variants
     const totalStock = useMemo(() => {
-        return products.reduce(
-            (acc, p) =>
-                acc +
-                p.variants.reduce((vAcc, v) => vAcc + v.stockQuantity, 0),
-            0
-        );
+        return products.reduce((acc, p) => acc + (p.totalQuantity || 0), 0);
     }, [products]);
 
+    // 3. Count of specific variants that are running low (<= 10)
     const lowStockCount = useMemo(() => {
         let count = 0;
-
         products.forEach((p) => {
-            p.variants.forEach((v) => {
+            (p.variants || []).forEach((v) => {
                 if (v.stockQuantity <= 10) count++;
             });
         });
-
         return count;
     }, [products]);
 
-    const totalSalesEstimate = useMemo(() => {
+    // 4. Financial valuation of all inventory
+    const totalInventoryValue = useMemo(() => {
         return products.reduce((acc, p) => {
-            return acc + p.basePrice * p.totalQuantity;
+            // Priority: Use retailPrice from JSON, fallback to discountedPrice
+            const price = p.retailPrice || p.discountedPrice || 0;
+            const quantity = p.totalQuantity || 0;
+            return acc + (price * quantity);
         }, 0);
     }, [products]);
 
-    /* ================= STATUS DATA ================= */
+    /* ================= STATUS CARD CONFIGURATION ================= */
 
-    const status = [
+    const statusCards = [
         {
-            label: "Total Product Value",
-            value: loading ? "..." : `Rs. ${totalSalesEstimate.toFixed(2)}`,
+            label: "Total Inventory Value",
+            value: loading ? "..." : `Rs. ${totalInventoryValue.toLocaleString(undefined, { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+            })}`,
             icon: <MdAttachMoney />,
             color: "#fdf2e9",
             iconColor: "#e67e22"
@@ -101,7 +113,7 @@ const AdminSlot: React.FC = () => {
             iconColor: "#3498db"
         },
         {
-            label: "Total Stock",
+            label: "Total Physical Stock",
             value: loading ? "..." : String(totalStock),
             icon: <MdBarChart />,
             color: "#f0fdf4",
@@ -109,11 +121,11 @@ const AdminSlot: React.FC = () => {
         }
     ];
 
-    /* ================= UI ================= */
+    /* ================= UI RENDER ================= */
 
     return (
         <div className="status_grid">
-            {status.map((stat, index) => (
+            {statusCards.map((stat, index) => (
                 <div className="status_card" key={index}>
                     <div
                         className="stat_icon_wrapper"

@@ -1,6 +1,6 @@
-import InventoryBilling from "../inventory/inventoryBilling/InventoryBilling";
 import ItemManagement from "../inventory/ItemManagement";
 import Clothnav from "../navbar/Clothnav";
+import ProductReturn from "../setting/product/productReturn";
 import Topheader from "../topheader/Topheader";
 import "./Inventory.css"; // Create this file
 
@@ -14,6 +14,9 @@ function Inventory() {
           <div className="inventory-grid">
             <div className="inventory-list-section">
               <ItemManagement />
+            </div>
+            <div>
+              <ProductReturn></ProductReturn>
             </div>
           </div>
         </div>
